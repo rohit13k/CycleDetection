@@ -1,0 +1,4 @@
+"C:\Program Files\JetBrains\CLion 2017.1.2\bin\cmake\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" C:\Users\Rohit\CLionProjects\CycleDetection
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/Rohit/CLionProjects/CycleDetection/cmake-build-debug
