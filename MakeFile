@@ -1,0 +1,17 @@
+OBJS = main.o countCycleFrequency.o 
+CC = g++
+DEBUG = -g
+CFLAGS = -Wall -c $(DEBUG)
+LFLAGS = -Wall $(DEBUG)
+
+count : $(OBJS)
+    $(CC) $(LFLAGS) $(OBJS) -o count
+
+main.o : countCycleFrequency.h countCycleFrequency.cpp 
+    $(CC) $(CFLAGS) main.cpp
+
+countCycleFrequency.o : Split.h Timer.h countCycleFrequency.h
+    $(CC) $(CFLAGS) countCycleFrequency.cpp
+
+clean:
+    \rm *.o *~ p1
