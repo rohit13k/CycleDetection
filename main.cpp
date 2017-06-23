@@ -2,10 +2,13 @@
 #include <tclap/CmdLine.h>
 #include "countCycleFrequency.h"
 #include "countWithPath.h"
-#include "DetectCycleRoot.h"
+#include "DetectCycle.h"
 #include <map>
-
+#include <iostream>
+#include "FileIndexer.h"
+#include <utility>
 #include <string>
+
 
 int main(int argc, char **argv) {
     // Wrap everything in a try block.  Do this every time,
@@ -47,8 +50,8 @@ int main(int argc, char **argv) {
 
         // Do what you intend.
        // findWithLength(inputGraph,resultFile,window,timeInMsec,cleanUpLimit,cyclelenght);
-        findRootNodes(inputGraph,resultFile,window,timeInMsec,cleanUpLimit);
-
+       findRootNodes(inputGraph,resultFile,window,timeInMsec,cleanUpLimit);
+        findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
 
 
     } catch (TCLAP::ArgException &e)  // catch any exceptions

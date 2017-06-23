@@ -8,7 +8,7 @@
 #include <string>
 #include <iostream>
 
-int findWithLength(std::string input,std::string output, int window,bool timeInMsec,int cleanUpLimit,int cyclelenght);
+void findWithLength(std::string input,std::string output, int window,bool timeInMsec,int cleanUpLimit,int cyclelenght);
 
 
 #endif //CYCLEDETECTION_COUNTCYCLEFREQUENCY_H

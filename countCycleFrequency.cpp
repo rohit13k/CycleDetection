@@ -22,7 +22,7 @@ typedef set<nodeid> node_set;
 typedef map<time, node_set> time_group;
 typedef time_group distance_summary[100];
 
-int findWithLength(std::string input, std::string output, int window,bool timeInMsec,int cleanUpLimit,int cyclelenght) {
+void findWithLength(std::string input, std::string output, int window,bool timeInMsec,int cleanUpLimit,int cyclelenght) {
     std::vector<std::string> templine;
     map<nodeid, distance_summary> completeSummary;
     std:: map<nodeid, distance_summary> ::iterator it;
@@ -176,6 +176,6 @@ int findWithLength(std::string input, std::string output, int window,bool timeIn
     result.close();
 
     timer.Stop();
-    return 0;
+
 }
 

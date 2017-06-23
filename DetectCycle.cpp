@@ -2,18 +2,17 @@
 // Created by Rohit on 21-Jun-17.
 //
 
-#include "DetectCycleRoot.h"
-#include "countCycleFrequency.h"
+#include "DetectCycle.h"
+#include "FileIndexer.h"
+#include "Split.h"
+#include "Timer.h"
 #include <string>
 #include <vector>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "Split.h"
-#include "Timer.h"
 #include <map>
 #include <set>
-
 
 using namespace std;
 
@@ -68,18 +67,7 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
                     for (itnode = timeGroupIt->second.begin(); itnode != timeGroupIt->second.end(); ++itnode) {
                         tempnode = *itnode;
                         if (tempnode.compare(dst) == 0) {
-                            //cycle found get all candidates
-                            //  findCandidateWhileUpdate(src, dst, &completeSummary, timestamp, window_bracket,&timeGroupIt);
-                            /*
-                            for(timeGroup::reverse_iterator newit=completeSummary.find(src)->second.rbegin();newit!=completeSummary.find(src)->second.rend();++newit){
-                                for (set<nodeid>::iterator iterator1 = newit->second.begin(); iterator1 != newit->second.end(); ++iterator1) {
-                                    if((*iterator1).compare(dst)!=0){
-                                        rootNodes[dst][temptime].insert(*iterator1);
-
-                                    }
-                                }
-                            }
-                            */
+                            
                             cycleFound = true;
 
                         } else {
@@ -141,59 +129,97 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
     return 0;
 }
 
-void copy(string fromNode, string toNode, map<nodeid, map<nodeid, long>> *completeSummary, long currenttime,
-          long window_bracket, long candidateTime) {
+int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string output, int window, bool timeInMsec,
+                 bool usingGlobalBlock) {
+    long window_bracket = window * 60 * 60;
+    double ptime = 0.0;
+    if (timeInMsec) {
+        window_bracket = window_bracket * 1000;
+    }
+    string line;
+    Platform::Timer timer;
+    timer.Start();
+    readFile(dataFile);
+    ptime = timer.LiveElapsedSeconds();
+    std::cout << "finished reading " << ptime
+              << std::endl;
 
-    set<nodeid> candidateset;
-    for (map<nodeid, long>::iterator it = completeSummary->find(fromNode)->second.begin();
-         it != completeSummary->find(fromNode)->second.end(); ++it) {
-        //if out of window remove it,
-        if (currenttime - it->second > window_bracket) {
-            (*completeSummary)[fromNode].erase(it);
-        } else {
-            //if already present in dst summary update time if greater
-            if ((*completeSummary)[toNode].count(it->first) > 0) {
-                if ((*completeSummary)[toNode][it->first] > it->second) {
-                    (*completeSummary)[toNode][it->first] = it->second;
-                }
-            } else {
-                (*completeSummary)[toNode][it->first] = it->second;
-            }
+    std::vector<std::string> templine;
+    ifstream infile(rootNodeFile.c_str());
+    string rootnode;
+    long t_s;
+    int i = 0;
+    while (infile >> line) {
+        templine = Tools::Split(line, ',');
+        set<string> candidateset;
+        rootnode = templine[0];
+        t_s = stol(templine[1].c_str());
+        for (i = 2; i < templine.size(); i++) {
+            candidateset.insert(templine[i]);
         }
-
+        candidateset.insert(rootnode);
+        findCycle(rootnode, t_s, &candidateset, window_bracket);
     }
 }
 
-set<nodeid>
-findCandidateWhileUpdate(string fromNode, string toNode, map<nodeid, timeGroup> *completeSummary, long currenttime,
-                         long window_bracket, timeGroup::iterator *it) {
-    set<nodeid> candidateset;
+void findCycle(std::string rootNode, long t_s, std::set<std::string> *candidates, long window_bracket) {
+    set<pedge> neighbours = getFilteredData(rootNode, t_s);
+    vector<std::string> initialpath;
+    set<std::string> seen;
+    for (set<pedge>::iterator eit = neighbours.begin(); eit != neighbours.end(); ++eit) {
+        initialpath.clear();
+        seen.clear();
+        initialpath.push_back(rootNode);
+        initialpath.push_back(eit->toVertex);
+        seen.insert(eit->toVertex);
+        if (findTemporalPath(eit->toVertex, rootNode, t_s, t_s + window_bracket, &initialpath, seen, candidates)) {
+            std::cout << "Found cycle: " << initialpath.size() << " : " ;
+            for (int i = 0; i < initialpath.size(); i++) {
+                std::cout << "->" << initialpath[i];
+            }
+            cout << endl;
+        }
+    }
 
-    if (*it != (*completeSummary).find(fromNode)->second.end()) {
-        long newtime = (*it)->first;
-        if (currenttime - (*it)->first > window_bracket) {
-            // if reached time which is out of window delete anything from now till end and return as no new candidate is possible
-            completeSummary->find(fromNode)->second.erase((*it), completeSummary->find(fromNode)->second.end());
-            return candidateset;
-        } else {
-            //all elements in this time is candidate
-            candidateset.insert((*it)->second.begin(), (*it)->second.end());
-            *it++;
-            set<nodeid> newcandidates = findCandidateWhileUpdate(fromNode, toNode, completeSummary, currenttime,
-                                                                 window_bracket, it);
-            candidateset.insert(newcandidates.begin(), newcandidates.end());
-            if ((*it)->second.count(toNode) == 0) {
-                // to node is present hence start a new cycle
+}
 
-                candidateset.erase(toNode);
-                rootNodes[toNode][(*it)->first] = candidateset;
+bool findTemporalPath(std::string src, std::string dst, long t_s, long t_end, vector<std::string> *path_till_here,
+                      set<string> seen, std::set<std::string> *candidates) {
 
+    vector<string> path_till_here_bkp;
+    for (int i = 0; i < path_till_here->size(); i++) {
+        path_till_here_bkp.push_back((*path_till_here)[i]);
+    }
+
+    set<pedge> Y = getFilteredData(src, t_s, t_end, candidates);
+    bool found = false;
+    for (set<pedge>::iterator edgeIt = Y.begin(); edgeIt != Y.end(); ++edgeIt) {
+        if (edgeIt->toVertex.compare(dst) == 0) {
+            path_till_here->push_back(edgeIt->toVertex);
+            return true;
+        } else if (seen.count(edgeIt->toVertex) == 0) {
+            seen.insert(edgeIt->toVertex);
+            path_till_here->push_back(edgeIt->toVertex);
+            found = findTemporalPath(edgeIt->toVertex, dst, edgeIt->time + 1, t_end, path_till_here, seen, candidates);
+
+            if (found) {
+                std::cout << "Found cycle: " << path_till_here->size() << " : " ;
+                for (int i = 0; i < path_till_here->size(); i++) {
+                    std::cout << "->" << (*path_till_here)[i];
+
+                }
+                path_till_here->clear();
+                for(int i=0;i<path_till_here_bkp.size();i++){
+                    path_till_here->push_back(path_till_here_bkp[i]);
+                }
+                cout << endl;
+                found=false;
+            } else {
+                return found;
             }
 
         }
-
     }
-
-    return candidateset;
+    return found;
 
 }
