@@ -50,9 +50,10 @@ int main(int argc, char **argv) {
 
         // Do what you intend.
        // findWithLength(inputGraph,resultFile,window,timeInMsec,cleanUpLimit,cyclelenght);
-       findRootNodes(inputGraph,resultFile,window,timeInMsec,cleanUpLimit);
+    //   findRootNodes(inputGraph,resultFile,window,timeInMsec,cleanUpLimit);
+   //     findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
+      //  findRootNodesNew(inputGraph,resultFile,window,timeInMsec);
         findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
-
 
     } catch (TCLAP::ArgException &e)  // catch any exceptions
     { std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; }

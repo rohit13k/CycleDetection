@@ -11,13 +11,13 @@
 #include <fstream>
 #include <vector>
 #include "Split.h"
-
+#include <limits>
 //struct pedge;
 
 
 
 using namespace std;
-map<string, map<long, set<string>>> sorteddata;
+std::map<std::string, std::map<long, std::set<std::string>>> sorteddata;
 
 int readFile(std::string inputFile) {
 
@@ -49,7 +49,7 @@ std::set<pedge> getFilteredData(string src, long t_s, long t_end, set<string> *c
             }
             //std::cout << low->first << ' ' << low->second << std::endl;
             for (xit = low->second.begin(); xit != low->second.end(); ++xit) {
-                string node=*xit;
+                string node = *xit;
                 if (candidates->count(*xit) > 0) {
                     pedge edge1;
                     edge1.fromVertex = src;
@@ -78,6 +78,51 @@ std::set<pedge> getFilteredData(string src, long t_s) {
         }
 
     }
+    return result;
+}
+
+long getMaxTime(string src, string dst, long t_uper) {
+    long result = -1;
+    if (sorteddata.count(src) > 0) {
+        std::map<long, set<string>> m = sorteddata[src];
+        for (std::map<long, set<string>>::iterator low = m.begin(); low != m.end(); ++low) {
+            long t = low->first;
+            if (t > t_uper) {
+                break;
+            } else {
+                if (low->second.count(dst) > 0) {
+                    if (t > result) {
+                        result = t;
+                    }
+
+                }
+            }
+        }
+
+    }
+
+    return result;
+}
+long getMinTime(string src, string dst, long t_lower,long t_uper) {
+    long result = std::numeric_limits<long>::max();
+    if (sorteddata.count(src) > 0) {
+        std::map<long, set<string>> m = sorteddata[src];
+        for (std::map<long, set<string>>::iterator low = m.lower_bound(t_lower-1); low != m.end(); ++low) {
+            long t = low->first;
+            if (t > t_uper) {
+                break;
+            } else {
+                if (low->second.count(dst) > 0) {
+                    if (t < result) {
+                        result = t;
+                    }
+
+                }
+            }
+        }
+
+    }
+
     return result;
 }
 

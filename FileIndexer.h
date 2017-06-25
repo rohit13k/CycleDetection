@@ -6,6 +6,7 @@
 #define CYCLEDETECTION_FILEINDEXER_H
 #include <set>
 #include <string>
+#include <map>
 struct pedge {
     std::string fromVertex;
     std::string toVertex;
@@ -21,5 +22,6 @@ int readFile(std::string inputFile);
 std::set<pedge> getFilteredData(std::string src, long t_s, long t_end, std::set<std::string> *candidates);
 
 std::set<pedge> getFilteredData(std::string src, long t_s);
-
+long getMaxTime(std::string src, std::string dst, long t_uper);
+long getMinTime(std::string src, std::string dst, long t_lower,long t_uper);
 #endif //CYCLEDETECTION_FILEINDEXER_H
