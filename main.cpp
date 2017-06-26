@@ -8,7 +8,7 @@
 #include "FileIndexer.h"
 #include <utility>
 #include <string>
-
+#include "Timer.h"
 
 int main(int argc, char **argv) {
     // Wrap everything in a try block.  Do this every time,
@@ -49,12 +49,19 @@ int main(int argc, char **argv) {
         }
 
         // Do what you intend.
+        Platform::Timer timer;
+        timer.Start();
+        long pend=0l;
        // findWithLength(inputGraph,resultFile,window,timeInMsec,cleanUpLimit,cyclelenght);
-    //   findRootNodes(inputGraph,resultFile,window,timeInMsec,cleanUpLimit);
+       findRootNodes(inputGraph,resultFile,window,timeInMsec,cleanUpLimit);
    //     findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
-      //  findRootNodesNew(inputGraph,resultFile,window,timeInMsec);
-        findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
 
+        //findRootNodesNew(inputGraph,resultFile,window,timeInMsec);
+        pend=timer.LiveElapsedSeconds();
+        std::cout<<"Found all root nodes and time"<<pend<<std::endl;
+
+        findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
+        std::cout<<"Found all cycles nodes and time"<<pend<<std::endl;
     } catch (TCLAP::ArgException &e)  // catch any exceptions
     { std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; }
 }

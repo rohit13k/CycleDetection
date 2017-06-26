@@ -256,8 +256,8 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
             candidateset.insert(templine[i]);
         }
         candidateset.insert(rootnode);
-         findCycle(rootnode, t_s, &candidateset, window_bracket);
-        //DynamicDFS(rootnode, t_s, candidateset, window_bracket);
+        // findCycle(rootnode, t_s, &candidateset, window_bracket);
+        DynamicDFS(rootnode, t_s, candidateset, window_bracket);
     }
 }
 
@@ -356,7 +356,7 @@ allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_
         if (x.toVertex.compare(rootnode) == 0) {
             x.time > lastp;
             lastp = x.time;
-            std::cout << "Found cycle: " << path_till_here.size() + 1 << " : ";
+           std::cout << "Found cycle: " << path_till_here.size() + 1 << " : ";
             for (int i = 0; i < path_till_here.size(); i++) {
                 std::cout << "->" << (path_till_here)[i];
 
