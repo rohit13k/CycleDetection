@@ -11,6 +11,13 @@ struct pedge {
     std::string fromVertex;
     std::string toVertex;
     long time;
+    bool operator=(const pedge &rhs){
+        if((fromVertex.compare(rhs.fromVertex)==0)&&(toVertex.compare(rhs.toVertex)==0)&&time==rhs.time){
+            return true;
+        }else{
+            false;
+        }
+    }
 
 };
 inline bool operator<(const pedge &lhs,const pedge &rhs) {

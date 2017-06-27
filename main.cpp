@@ -58,10 +58,16 @@ int main(int argc, char **argv) {
 
         //findRootNodesNew(inputGraph,resultFile,window,timeInMsec);
         pend=timer.LiveElapsedSeconds();
-        std::cout<<"Found all root nodes and time"<<pend<<std::endl;
+        std::cout<<"Found all root nodes and time "<<pend<<std::endl;
 
         findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
-        std::cout<<"Found all cycles nodes and time"<<pend<<std::endl;
+        std::cout<<"Found all cycles nodes and time "<<timer.LiveElapsedSeconds()-pend<<std::endl;
+
+
+
     } catch (TCLAP::ArgException &e)  // catch any exceptions
     { std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; }
+    catch(std::exception &e){
+        std::cerr << "error: " << e.what() << std::endl;
+    }
 }

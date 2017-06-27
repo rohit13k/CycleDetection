@@ -17,6 +17,33 @@
 
 using namespace std;
 
+struct tpath {
+    vector<pedge> path;
+    set<nodeid> seen;
+    nodeid rootnode;
+    long t_start;
+
+    bool operator<(const tpath &rhs) {
+        return t_start < rhs.t_start;
+    }
+
+    bool operator==(const tpath &rhs) {
+        if (rhs.rootnode.compare(rootnode) == 0) {
+            if (rhs.t_start == t_start) {
+                if (path.size() == rhs.path.size()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+};
+
 map<nodeid, timeGroup> rootNodes;
 map<nodeid, long> ct;//closing times
 map<nodeid, set<pair<nodeid, long>>> U;//unblock list
@@ -258,6 +285,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
         candidateset.insert(rootnode);
         // findCycle(rootnode, t_s, &candidateset, window_bracket);
         DynamicDFS(rootnode, t_s, candidateset, window_bracket);
+
     }
 }
 
@@ -328,21 +356,31 @@ void unblock(nodeid v, long t_v, long t_e) {
         if (t_v > ct[v]) {
             ct[v] = t_v;
             if (U.count(v) > 0) {
+                set<pair<nodeid, long>> newV;
                 for (set<pair<nodeid, long>>::iterator it = U[v].begin(); it != U[v].end(); ++it) {
-                    if (it->second < t_v) {
+                    long timew = it->second;
+                    if (timew < t_v) {
                         long t_max = getMaxTime(it->first, v, t_v);
-                        unblock(it->first, t_max, t_e);
-                        U[v].erase(it);
-                        long t_min = getMinTime(it->first, v, t_v, t_e);
+                        string nodew = it->first;
+                        unblock(nodew, t_max, t_e);
+
+                        //   U[v].erase(make_pair(nodew,timew));
+                        long t_min = getMinTime(nodew, v, t_v, t_e);
                         if (t_min != std::numeric_limits<long>::max()) {
-                            U[v].insert(std::make_pair(it->first, t_min));
+                            newV.insert(std::make_pair(nodew, t_min));
+
                         }
+                    } else {
+                        newV.insert(*it);
                     }
                 }
+                U[v].clear();
+                U[v] = newV;
             }
         }
     }
 }
+
 
 bool
 allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_till_here,
@@ -356,12 +394,14 @@ allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_
         if (x.toVertex.compare(rootnode) == 0) {
             x.time > lastp;
             lastp = x.time;
-           std::cout << "Found cycle: " << path_till_here.size() + 1 << " : ";
-            for (int i = 0; i < path_till_here.size(); i++) {
-                std::cout << "->" << (path_till_here)[i];
+            if(path_till_here.size() + 1>2) {
+                std::cout << "Found cycle: " << path_till_here.size() + 1 << " : ";
+                for (int i = 0; i < path_till_here.size(); i++) {
+                    std::cout << "->" << (path_till_here)[i];
 
+                }
+                std::cout << "->" << w << "," << rootnode << "," << x.time << endl;
             }
-            std::cout << "->" << w << "," << rootnode << "," << x.time << endl;
         }
     }
     V.erase(rootnode);
@@ -374,7 +414,7 @@ allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_
             set<string> newcand = candidates;
             newcand.erase(x);
             vector<std::string> newpath = path_till_here;
-            newpath.push_back(w +","+ x +","+ to_string(t_min));
+            newpath.push_back(w + "," + x + "," + to_string(t_min));
             bool pathFound = allPath(x, rootnode, t_min + 1, t_e, newpath, newcand);
             if (ct[x] <= t_min || !pathFound) {
                 time_x.clear();
@@ -417,9 +457,59 @@ void DynamicDFS(nodeid rootnode, long t_s, std::set<std::string> candidates, lon
 
     for (auto x:neighbours) {
         std::set<std::string> tempcandidate = candidates;
+
         tempcandidate.erase(x.toVertex);
         vector<std::string> path_till_here;
         path_till_here.push_back(rootnode + "," + x.toVertex + "," + to_string(x.time));
         allPath(x.toVertex, rootnode, t_s + 1, t_s + window_bracket, path_till_here, tempcandidate);
     }
+}
+
+void findAllCycleNaive(std::string inputGraph, std::string resultFile, long window, long timeInMsec) {
+    long window_bracket = window * 60 * 60;
+    double ptime = 0.0;
+    if (timeInMsec) {
+        window_bracket = window_bracket * 1000;
+    }
+    string line;
+    Platform::Timer timer;
+    timer.Start();
+    ptime = timer.LiveElapsedSeconds();
+    std::cout << "finished reading " << ptime
+              << std::endl;
+
+    std::vector<std::string> templine;
+    ifstream infile(inputGraph.c_str());
+    string src, dst;
+    long t_s;
+    int i = 0;
+    map<nodeid, vector<pair<vector<pedge>, set<nodeid>>>> allpaths;
+    map<nodeid, vector<pair<vector<pedge>, set<nodeid>>>>::iterator pathiterator;
+    vector<pair<vector<pedge>, set<nodeid>>>::iterator inneriterator;
+    //  map<nodeid,vector<pair<vector<pedge>,set<nodeid>>>*> pathendpointers;
+    while (infile >> line) {
+        templine = Tools::Split(line, ',');
+        set<string> candidateset;
+        src = templine[0];
+        t_s = stol(templine[2].c_str());
+        for (pathiterator = allpaths.begin(); pathiterator != allpaths.end(); ++pathiterator) {
+            for (inneriterator = pathiterator->second.begin();
+                 inneriterator != pathiterator->second.end(); ++inneriterator) {
+                if (inneriterator->first.size() > 0) {
+                    if (t_s - inneriterator->first[0].time > window_bracket) {
+                        pathiterator->second.erase(inneriterator);
+                    } else {
+
+                        if (inneriterator->first[inneriterator->first.size() - 1].toVertex.compare(src) == 0) {
+
+                            //path could be extended
+                        }
+                    }
+                }
+
+            }
+
+        }
+    }
+
 }

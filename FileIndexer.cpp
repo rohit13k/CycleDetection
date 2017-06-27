@@ -68,16 +68,18 @@ std::set<pedge> getFilteredData(string src, long t_s) {
     std::set<pedge> result;
 
     if (sorteddata.count(src) > 0) {
-        set<string> m = sorteddata[src][t_s];
-        for (auto x:m) {
-            pedge edge1;
-            edge1.fromVertex = src;
-            edge1.toVertex = x;
-            edge1.time = t_s;
-            result.insert(edge1);
+        if (sorteddata[src].count(t_s) > 0) {
+            set<string> m = sorteddata[src][t_s];
+            for (auto x:m) {
+                pedge edge1;
+                edge1.fromVertex = src;
+                edge1.toVertex = x;
+                edge1.time = t_s;
+                result.insert(edge1);
+            }
         }
-
     }
+
     return result;
 }
 
@@ -103,11 +105,12 @@ long getMaxTime(string src, string dst, long t_uper) {
 
     return result;
 }
-long getMinTime(string src, string dst, long t_lower,long t_uper) {
+
+long getMinTime(string src, string dst, long t_lower, long t_uper) {
     long result = std::numeric_limits<long>::max();
     if (sorteddata.count(src) > 0) {
         std::map<long, set<string>> m = sorteddata[src];
-        for (std::map<long, set<string>>::iterator low = m.lower_bound(t_lower-1); low != m.end(); ++low) {
+        for (std::map<long, set<string>>::iterator low = m.lower_bound(t_lower - 1); low != m.end(); ++low) {
             long t = low->first;
             if (t > t_uper) {
                 break;

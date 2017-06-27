@@ -38,4 +38,6 @@ bool allPath(nodeid w, nodeid rootnode, long t_s, long t_e, std::vector <std::st
              std::set<std::string> candidates);
 void DynamicDFS(nodeid rootnode,long t_s, std::set<std::string> candidates, long window_bracket);
 
+void findAllCycleNaive(std::string inputGraph,std::string resultFile,long window,long timeInMsec);
+
 #endif //CYCLEDETECTION_DETECTCYCLEROOT_H
