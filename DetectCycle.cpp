@@ -23,18 +23,24 @@ struct tpath {
     nodeid rootnode;
     long t_start;
 
-    bool operator<(const tpath &rhs) {
-        return t_start < rhs.t_start;
+    bool operator<(const tpath &rhs) const {
+        if (rhs.t_start == t_start) {
+            return rhs.path < path;
+        } else
+            return rhs.t_start < t_start;
     }
 
-    bool operator==(const tpath &rhs) {
+    bool operator==(const tpath &rhs) const {
         if (rhs.rootnode.compare(rootnode) == 0) {
             if (rhs.t_start == t_start) {
-                if (path.size() == rhs.path.size()) {
+                if (path == rhs.path) {
+                    cout << "p" << endl;
                     return true;
                 } else {
                     return false;
                 }
+
+
             } else {
                 return false;
             }
@@ -274,6 +280,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     string rootnode;
     long t_s;
     int i = 0;
+
     while (infile >> line) {
         templine = Tools::Split(line, ',');
         set<string> candidateset;
@@ -284,7 +291,10 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
         }
         candidateset.insert(rootnode);
         // findCycle(rootnode, t_s, &candidateset, window_bracket);
-        DynamicDFS(rootnode, t_s, candidateset, window_bracket);
+        if(candidateset.size()>2) {
+            //run only for cycle with lenght greater than 2
+            DynamicDFS(rootnode, t_s, candidateset, window_bracket);
+        }
 
     }
 }
@@ -394,8 +404,8 @@ allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_
         if (x.toVertex.compare(rootnode) == 0) {
             x.time > lastp;
             lastp = x.time;
-            if(path_till_here.size() + 1>2) {
-                std::cout << "Found cycle: " << path_till_here.size() + 1 << " : ";
+            if (path_till_here.size() + 1 > 2) {
+                std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
                 for (int i = 0; i < path_till_here.size(); i++) {
                     std::cout << "->" << (path_till_here)[i];
 
@@ -466,50 +476,128 @@ void DynamicDFS(nodeid rootnode, long t_s, std::set<std::string> candidates, lon
 }
 
 void findAllCycleNaive(std::string inputGraph, std::string resultFile, long window, long timeInMsec) {
-    long window_bracket = window * 60 * 60;
+    long window_bracket = window *60*60;
     double ptime = 0.0;
+    int count = 0;
     if (timeInMsec) {
         window_bracket = window_bracket * 1000;
     }
     string line;
     Platform::Timer timer;
     timer.Start();
-    ptime = timer.LiveElapsedSeconds();
-    std::cout << "finished reading " << ptime
-              << std::endl;
+
 
     std::vector<std::string> templine;
     ifstream infile(inputGraph.c_str());
     string src, dst;
     long t_s;
     int i = 0;
-    map<nodeid, vector<pair<vector<pedge>, set<nodeid>>>> allpaths;
-    map<nodeid, vector<pair<vector<pedge>, set<nodeid>>>>::iterator pathiterator;
-    vector<pair<vector<pedge>, set<nodeid>>>::iterator inneriterator;
+    map<nodeid, set<tpath>> allpaths;
+    map<nodeid, set<tpath>>::iterator pathiterator;
+    set<tpath>::iterator inneriterator;
+    ofstream result;
+    result.open(resultFile.c_str());
     //  map<nodeid,vector<pair<vector<pedge>,set<nodeid>>>*> pathendpointers;
     while (infile >> line) {
         templine = Tools::Split(line, ',');
         set<string> candidateset;
         src = templine[0];
+        dst = templine[1];
         t_s = stol(templine[2].c_str());
+        //check if existing paths could be extended
         for (pathiterator = allpaths.begin(); pathiterator != allpaths.end(); ++pathiterator) {
+            set<tpath> newpaths;
             for (inneriterator = pathiterator->second.begin();
                  inneriterator != pathiterator->second.end(); ++inneriterator) {
-                if (inneriterator->first.size() > 0) {
-                    if (t_s - inneriterator->first[0].time > window_bracket) {
-                        pathiterator->second.erase(inneriterator);
+
+                if (inneriterator->path.size() > 0) {
+                    if (t_s - inneriterator->path[0].time > window_bracket) {
+                        inneriterator=  pathiterator->second.erase(inneriterator, pathiterator->second.end());
+                        if(inneriterator==pathiterator->second.end()){
+                            break;
+                        }
                     } else {
+                        if (inneriterator->path[inneriterator->path.size() - 1].toVertex.compare(src) == 0) {
+                            if (inneriterator->rootnode.compare(dst) == 0) {
+                                //cycle found
+                             //   std::cout << "Found cycle, " << inneriterator->path.size() + 1 << " , ";
+                                result << "Found cycle, " << inneriterator->path.size() + 1 << " , ";
+                                for (int i = 0; i < inneriterator->path.size(); i++) {
+                              //      std::cout << "->" << (*inneriterator).path[i].fromVertex << ","
+                                //              << (*inneriterator).path[i].toVertex << ","
+                                  //            << (*inneriterator).path[i].time;
+                                    result << "->" << (*inneriterator).path[i].fromVertex << ","
+                                           << (*inneriterator).path[i].toVertex << ","
+                                           << (*inneriterator).path[i].time;
 
-                        if (inneriterator->first[inneriterator->first.size() - 1].toVertex.compare(src) == 0) {
+                                }
+                            //    std::cout << "->" << line << endl;
+                                result << "->" << line << "\n";
+                                inneriterator = pathiterator->second.erase(inneriterator);
+                                if (pathiterator->second.size() == 0) {
+                                    break;
+                                }
 
-                            //path could be extended
+                            } else if (inneriterator->seen.count(src) == 0) {
+                                //path could be extended
+                                tpath newpath;
+                                newpath.rootnode=inneriterator->rootnode;
+                                newpath.seen=inneriterator->seen;
+                                newpath.seen.insert(src);
+                                pedge newedge;
+                                newedge.fromVertex = src;
+                                newedge.toVertex = dst;
+                                newedge.time = t_s;
+                                newpath.path=inneriterator->path;
+                                newpath.path.push_back(newedge);
+                                newpaths.insert(newpath);
+                            }
+
+
                         }
                     }
                 }
 
             }
+            if (newpaths.size() > 0) {
+                pathiterator->second.insert(newpaths.begin(), newpaths.end());
+             //   newpaths.clear();
+            }
 
         }
+
+        //add as new path with current edge as first edge
+        tpath newpath;
+        pedge newedge;
+        newedge.fromVertex = src;
+        newedge.toVertex = dst;
+        newedge.time = t_s;
+        newpath.path.push_back(newedge);
+        newpath.t_start = t_s;
+        newpath.rootnode = src;
+        //newpath.seen.insert(dst);
+
+        allpaths[src].insert(newpath);
+        count++;
+        if (count % 10000 == 0) {
+            //do cleanup
+
+            std::cout << "finished parsing, count," << count << " , " << timer.LiveElapsedSeconds() - ptime
+                      << ", ";
+            for ( map<nodeid, set<tpath>>::iterator it = allpaths.begin(); it != allpaths.end(); ++it) {
+                it=allpaths.erase(it);
+                if(it==allpaths.end()){
+                    break;
+                }
+            }
+            std::cout<<allpaths.size()<<endl;
+            ptime = timer.LiveElapsedSeconds();
+        }
     }
+    result.close();
+    std::cout << "finished parsing all " << timer.LiveElapsedSeconds()
+              << std::endl;
+    timer.Stop();
+
 
 }
