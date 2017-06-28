@@ -6,6 +6,7 @@
 #include "FileIndexer.h"
 #include "Split.h"
 #include "Timer.h"
+#include "MemoryMonitor.h"
 #include <string>
 #include <vector>
 #include <fstream>
@@ -590,7 +591,7 @@ void findAllCycleNaive(std::string inputGraph, std::string resultFile, long wind
                     break;
                 }
             }
-            std::cout<<allpaths.size()<<endl;
+            std::cout<<allpaths.size()<<" Memory, "<<getMem()<<endl;
             ptime = timer.LiveElapsedSeconds();
         }
     }

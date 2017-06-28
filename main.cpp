@@ -9,6 +9,7 @@
 #include <utility>
 #include <string>
 #include "Timer.h"
+#include "MemoryMonitor.h"
 
 int main(int argc, char **argv) {
     // Wrap everything in a try block.  Do this every time,
@@ -51,6 +52,7 @@ int main(int argc, char **argv) {
         // Do what you intend.
         Platform::Timer timer;
         timer.Start();
+        std::cout<<"Memory start, "<<getMem()<<std::endl;
         long pend=0l;
        // findWithLength(inputGraph,resultFile,window,timeInMsec,cleanUpLimit,cyclelenght);
        //findRootNodes(inputGraph,resultFile,window,timeInMsec,cleanUpLimit);
@@ -65,6 +67,8 @@ int main(int argc, char **argv) {
        // findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
 
         std::cout<<"Found all cycles nodes and time "<<timer.LiveElapsedSeconds()-pend<<std::endl;
+
+        std::cout<<"Memory end, "<<getMem()<<std::endl;
 
 
 
