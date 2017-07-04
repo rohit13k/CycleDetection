@@ -537,10 +537,10 @@ void findAllCycleNaive(std::string inputGraph, std::string resultFile, long wind
                                     }
                                     //    std::cout << "->" << line << endl;
                                     result << "->" << line << "\n";
-                                    inneriterator = pathiterator->second.erase(inneriterator);
-                                    if (pathiterator->second.size() == 0) {
-                                        break;
-                                    }
+                                  //  inneriterator = pathiterator->second.erase(inneriterator);
+                                   // if (pathiterator->second.size() == 0) {
+                                     //   break;
+                                    //}
 
                                 } else if (inneriterator->seen.count(src) == 0) {
                                     //path could be extended
