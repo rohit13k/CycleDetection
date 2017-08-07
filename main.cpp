@@ -58,13 +58,13 @@ int main(int argc, char **argv) {
        //findRootNodes(inputGraph,resultFile,window,timeInMsec,cleanUpLimit);
    //     findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
 
-        //findRootNodesNew(inputGraph,resultFile,window,timeInMsec);
+      // findRootNodesNew(inputGraph,resultFile,window,timeInMsec);
         pend=timer.LiveElapsedSeconds();
 
         findAllCycleNaive( inputGraph,  resultFile,  window,  timeInMsec);
         std::cout<<"Found all root nodes and time "<<pend<<std::endl;
 
-       // findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
+      //  findAllCycle(inputGraph,resultFile,"D:\\dataset\\sms_paths.csv",window,timeInMsec,false);
 
         std::cout<<"Found all cycles nodes and time "<<timer.LiveElapsedSeconds()-pend<<std::endl;
 
