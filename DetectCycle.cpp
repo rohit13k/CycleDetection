@@ -527,7 +527,7 @@ void findAllCycleNaive(std::string inputGraph, std::string resultFile, long wind
 
                     if (inneriterator->path.size() > 0) {
                         if (t_s - inneriterator->path[0].time > window_bracket) {
-                            inneriterator = pathiterator->second.erase(inneriterator, pathiterator->second.end());
+                            inneriterator = pathiterator->second.erase(inneriterator);
                             if (inneriterator == pathiterator->second.end()) {
                                 break;
                             }
@@ -606,12 +606,13 @@ void findAllCycleNaive(std::string inputGraph, std::string resultFile, long wind
 
             std::cout << "finished parsing, count," << count << " , " << timer.LiveElapsedSeconds() - ptime
                       << ", ";
+            /*
             for (map<nodeid, set<tpath>>::iterator it = allpaths.begin(); it != allpaths.end(); ++it) {
                 it = allpaths.erase(it);
                 if (it == allpaths.end()) {
                     break;
                 }
-            }
+            }*/
             std::cout << allpaths.size() << " Memory, " << getMem() <<" Cycle, "<<cyclecount <<endl;
             ptime = timer.LiveElapsedSeconds();
         }
