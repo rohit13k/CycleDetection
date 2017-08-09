@@ -24,15 +24,17 @@ int main(int argc, char **argv) {
         TCLAP::ValueArg<std::string> resultArg("o", "result", "path to store the result", true, "", "string");
         TCLAP::ValueArg<std::string> time_param("t", "time_param", "timestamp is msec or sec", false, "sec", "string");
         TCLAP::ValueArg<int> cleanUp("c", "cleanUpLimit", "clean up size", false, 10000, "int");
+        TCLAP::ValueArg<int> algo("a", "rootAlgo", "algorithm to find root 0 old 1 new", false, 1, "int");
 
         TCLAP::ValueArg<int> cycle("l", "cycleLenght", "cycle lenght", false, 80, "int");
 
         cmd.add(inputGraphArg);
         cmd.add(windowArg);
         cmd.add(resultArg);
-        cmd.add( time_param);
-        cmd.add( cleanUp);
-        cmd.add( cycle);
+        cmd.add(time_param);
+        cmd.add(cleanUp);
+        cmd.add(algo);
+        cmd.add(cycle);
 
 
         // Parse the argv array.
@@ -42,39 +44,39 @@ int main(int argc, char **argv) {
         std::string inputGraph = inputGraphArg.getValue();
         std::string resultFile = resultArg.getValue();
         int window = windowArg.getValue();
-        bool timeInMsec=false;
-        int cleanUpLimit=cleanUp.getValue();
-       int cyclelenght=cycle.getValue();
-        if(time_param.getValue().compare("sec")!=0){
-            timeInMsec=true;
+        bool timeInMsec = false;
+        int cleanUpLimit = cleanUp.getValue();
+        int cyclelenght = cycle.getValue();
+        if (time_param.getValue().compare("sec") != 0) {
+            timeInMsec = true;
         }
-
+        int rootAlgo = algo.getValue();
         // Do what you intend.
         Platform::Timer timer;
         timer.Start();
-        std::cout<<"Memory start, "<<getMem()<<std::endl;
-        long pend=0l;
-       // findWithLength(inputGraph,resultFile,window,timeInMsec,cleanUpLimit,cyclelenght);
-     //  findRootNodes(inputGraph,resultFile,window,timeInMsec,cleanUpLimit);
-   //    findAllCycle(inputGraph,resultFile,"",window,timeInMsec,false);
+        std::cout << "Memory start, " << getMem() << std::endl;
+        long pend = 0l;
+        // findWithLength(inputGraph,resultFile,window,timeInMsec,cleanUpLimit,cyclelenght);
+        if (rootAlgo == 0) {
+            findRootNodes(inputGraph, resultFile, window, timeInMsec, cleanUpLimit);
+        } else {
+            findRootNodesNew(inputGraph, resultFile, window, timeInMsec, cleanUpLimit);
+        }
+        pend = timer.LiveElapsedSeconds();
 
-      // findRootNodesNew(inputGraph,resultFile,window,timeInMsec);
-        pend=timer.LiveElapsedSeconds();
+        //   findAllCycleNaive( inputGraph,  resultFile,  window,  timeInMsec);
+        std::cout << "Found all root nodes and time " << pend << std::endl;
 
-      findAllCycleNaive( inputGraph,  resultFile,  window,  timeInMsec);
-        std::cout<<"Found all root nodes and time "<<pend<<std::endl;
+        findAllCycle(inputGraph, resultFile, "D:\\dataset\\sms_paths.csv", window, timeInMsec, false);
 
-    //    findAllCycle(inputGraph,resultFile,"D:\\dataset\\sms_paths.csv",window,timeInMsec,false);
+        std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
 
-        std::cout<<"Found all cycles nodes and time "<<timer.LiveElapsedSeconds()-pend<<std::endl;
-
-        std::cout<<"Memory end, "<<getMem()<<std::endl;
-
+        std::cout << "Memory end, " << getMem() << std::endl;
 
 
     } catch (TCLAP::ArgException &e)  // catch any exceptions
     { std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; }
-    catch(std::exception &e){
+    catch (std::exception &e) {
         std::cerr << "error: " << e.what() << std::endl;
     }
 }

@@ -28,9 +28,9 @@ void findCycle(std::string rootNode, long t_s, std::set<std::string> *candidates
 bool findTemporalPath(std::string src, std::string dst, long t_s, long t_end, std::vector<std::string> *path_till_here,
                       std::set<std::string> seen, std::set<std::string> *candidates);
 
-std::set<nodeid> getCandidates(std::set<std::pair<nodeid, long>> summary, long t_s, long t_e);
+std::set<nodeid> getCandidates(std::map<long, std::set<nodeid>> summary, long t_s, long t_e);
 
-int findRootNodesNew(std::string input, std::string output, int window, bool timeInMsec);
+int findRootNodesNew(std::string input, std::string output, int window, bool timeInMsec,int cleanUpLimit);
 
 std::set<long> getAllTime(std::set<pedge> E, nodeid dst);
 

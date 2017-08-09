@@ -55,6 +55,7 @@ map<nodeid, timeGroup> rootNodes;
 map<nodeid, long> ct;//closing times
 std::set<string> resultAllPath;
 map<nodeid, set<pair<nodeid, long>>> U;//unblock list
+
 int findRootNodes(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit) {
     map<nodeid, timeGroup> completeSummary;
 
@@ -127,6 +128,7 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
             //do cleanup
             double parseTime = timer.LiveElapsedSeconds() - ptime;
             ptime = timer.LiveElapsedSeconds();
+            /*
             for (it = completeSummary.begin(); it != completeSummary.end(); ++it) {
                 for (timeGroupIt = completeSummary.find(it->first)->second.begin();
                      timeGroupIt != completeSummary.find(it->first)->second.end(); ++timeGroupIt) {
@@ -138,9 +140,10 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
                     }
                 }
             }
+             */
             double eraseTime = timer.LiveElapsedSeconds() - ptime;
             ptime = timer.LiveElapsedSeconds();
-            std::cout << "finished parsing, count," << count << "," << parseTime << "," << eraseTime << std::endl;
+            std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem() << std::endl;
 
         }
     }
@@ -166,8 +169,8 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
     return 0;
 }
 
-int findRootNodesNew(std::string input, std::string output, int window, bool timeInMsec) {
-    map<nodeid, set<pair<nodeid, long>>> completeSummary;
+int findRootNodesNew(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit) {
+    map<nodeid, map<long, set<nodeid>>> completeSummary;
 
 
     std::vector<std::string> templine;
@@ -200,39 +203,47 @@ int findRootNodesNew(std::string input, std::string output, int window, bool tim
         if (src.compare(dst) == 0) {
             //self loop ignored
         } else {
-            //if src summary exist transfer it to dst  if in window prune away whats not in window
-            if (completeSummary.count(dst) > 0) {
-                completeSummary[dst].insert(make_pair(src, timestamp));
-            } else {
-                set<pair<nodeid, long>> dstsummary;
-                dstsummary.insert(make_pair(src, timestamp));
-                completeSummary[dst] = dstsummary;
-            }
-            if (completeSummary.count(src) > 0) {
-                for (set<pair<nodeid, long>>::iterator it = completeSummary[src].begin();
-                     it != completeSummary[src].end(); ++it) {
-                    if (it->second > timestamp - window_bracket) {
-                        if (it->first.compare(dst) == 0) {
 
-                            set<nodeid> candidates = getCandidates(completeSummary[src], it->second,
-                                                                   it->second + window_bracket);
+            //add src in the destination summary
+            completeSummary[dst][-1 * timestamp].insert(src);
+
+            //if src summary exist transfer it to dst  if it is in window prune away whats not in window
+            if (completeSummary.count(src) > 0) {
+                for (map<long, set<nodeid>>::iterator it = completeSummary[src].begin();
+                     it != completeSummary[src].end(); ++it) {
+                    if ((-1 * it->first) > timestamp - window_bracket) {
+
+                        if (it->second.count(dst) > 0) {
+                            //the destination is already in src summary hence a cycle exist
+                            set<nodeid> candidates = getCandidates(completeSummary[src],  -1 * it->first,
+                                                                   ( -1 * it->first) + window_bracket);
                             candidates.erase(dst);
+                            candidates.insert(src);
                             if (candidates.size() > 1) {//only cycles having more than 1 nodes
-                                result << it->first << ",";
-                                result << it->second << ",";
+
+                                result << dst << ",";
+                                result << (-1* it->first) << ",";
                                 for (string x:candidates) {
                                     result << x << ",";
+
                                 }
                                 result << "\n";
+
+                            }
+                            // add other in the summary
+                            for (auto x:it->second) {
+                                if (x.compare(dst) != 0) {
+                                    completeSummary[dst][it->first].insert(x);
+                                }
                             }
                         } else {
-                            completeSummary[dst].insert(*it);
+                            completeSummary[dst][it->first].insert(it->second.begin(), it->second.end());
                         }
                     } else {
-                        completeSummary[src].erase(it);
-                        if (it == completeSummary[src].end()) {
-                            break;
-                        }
+                        completeSummary[src].erase(it, completeSummary[src].end());
+                        break;
+
+
                     }
                 }
             }
@@ -240,10 +251,11 @@ int findRootNodesNew(std::string input, std::string output, int window, bool tim
 
         }
         count++;
-        if (count % 10000 == 0) {
+        if (count % cleanUpLimit == 0) {
             //do cleanup
-
-            std::cout << "finished parsing, count," << count << std::endl;
+            double parseTime = timer.LiveElapsedSeconds() - ptime;
+            ptime = timer.LiveElapsedSeconds();
+            std::cout << "finished parsing, count," << count << "," << parseTime  << ","<<getMem()<<std::endl;
 
         }
     }
@@ -255,11 +267,14 @@ int findRootNodesNew(std::string input, std::string output, int window, bool tim
     return 0;
 }
 
-set<nodeid> getCandidates(set<pair<nodeid, long>> summary, long t_s, long t_e) {
+set<nodeid> getCandidates(map<long, set<nodeid>> summary, long t_s, long t_e) {
     set<nodeid> candidates;
-    for (set<pair<nodeid, long>>::iterator it = summary.begin(); it != summary.end(); ++it) {
-        if (it->second >= t_s && it->second < t_e) {
-            candidates.insert(it->first);
+    long time;
+    for (map<long, set<nodeid>>::iterator it = summary.begin(); it != summary.end(); ++it) {
+        time=-1* it->first;
+        if (time >= t_s && time< t_e) {
+
+            candidates.insert(it->second.begin(),it->second.end());
         }
     }
     return candidates;
@@ -302,8 +317,24 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
         }
 
     }
+    int cycleLengthArray[50];
+    int cycleLenght;
+    int maxCycleLenght=0;
     for (auto x:resultAllPath) {
-        cout << x << endl;
+        templine = Tools::Split(x, ',');
+        cycleLenght=stoi(templine[1]);
+        if(cycleLenght<50) {
+            cycleLengthArray[cycleLenght]++;
+            if(cycleLenght>maxCycleLenght){
+                maxCycleLenght=cycleLenght;
+            }
+        }
+        else
+            cout<<"cycle of length greather than 50 found";
+        //cout << x << endl;
+    }
+    for(int i=1;i<maxCycleLenght-1;i++){
+        cout <<i<<","<<cycleLengthArray[i] << endl;
     }
 }
 
@@ -414,14 +445,14 @@ allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_
             lastp = x.time;
             if (path_till_here.size() + 1 > 2) {
                 //  std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
-                std::string resultline = "Found cycle, " + to_string(path_till_here.size() + 1) + " , ";
+                std::string resultline = "Found cycle," + to_string(path_till_here.size() + 1) + ",";
                 for (int i = 0; i < path_till_here.size(); i++) {
                     // std::cout << "->" << (path_till_here)[i];
-                    resultline = resultline + "->" + (path_till_here)[i];
+                    resultline = resultline + "," + (path_till_here)[i];
 
                 }
                 //  std::cout << "->" << w << "," << rootnode << "," << x.time << endl;
-                resultline = resultline + "->" + w + "," + rootnode + "," + to_string(x.time) + "\n";
+                resultline = resultline + "," + w + "," + rootnode + "," + to_string(x.time);
                 resultAllPath.insert(resultline);
             }
         }
@@ -518,17 +549,17 @@ void findAllCycleNaive(std::string inputGraph, std::string resultFile, long wind
         dst = templine[1];
         t_s = stol(templine[2].c_str());
         if (src.compare(dst) != 0) {
-        pedge newedge;
-        newedge.fromVertex = src;
-        newedge.toVertex = dst;
-        newedge.time = t_s;
-        tpath newpath;
-        newpath.path.push_back(newedge);
-        newpath.t_start = t_s;
-        newpath.rootnode = src;
-        newpath.seen.insert(dst);
-        newpath.seen.insert(src);
-        allpaths[dst].push_back(newpath);
+            pedge newedge;
+            newedge.fromVertex = src;
+            newedge.toVertex = dst;
+            newedge.time = t_s;
+            tpath newpath;
+            newpath.path.push_back(newedge);
+            newpath.t_start = t_s;
+            newpath.rootnode = src;
+            newpath.seen.insert(dst);
+            newpath.seen.insert(src);
+            allpaths[dst].push_back(newpath);
 
             //get all the paths ending with dst
             if (allpaths.count(src) > 0) {
@@ -550,7 +581,7 @@ void findAllCycleNaive(std::string inputGraph, std::string resultFile, long wind
 
                                 }
                                 //    std::cout << "->" << line << endl;
-                                result << line << "\n";
+                                result << line + "\n";
                             }
                         } else if (allpaths[src][index].seen.count(dst) == 0) {// dst is not yet seen
                             tpath extendedpath;
