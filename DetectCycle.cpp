@@ -333,7 +333,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
             cout<<"cycle of length greather than 50 found";
         //cout << x << endl;
     }
-    for(int i=1;i<maxCycleLenght-1;i++){
+    for(int i=1;i<=maxCycleLenght;i++){
         cout <<i<<","<<cycleLengthArray[i] << endl;
     }
 }
