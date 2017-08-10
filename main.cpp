@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
         TCLAP::ValueArg<std::string> time_param("t", "time_param", "timestamp is msec or sec", false, "sec", "string");
         TCLAP::ValueArg<int> cleanUp("c", "cleanUpLimit", "clean up size", false, 10000, "int");
         TCLAP::ValueArg<int> algo("a", "rootAlgo", "algorithm to find root 0 old 1 new", false, 1, "int");
+        TCLAP::ValueArg<bool> reverse("r", "reverseDirection", "reverse Direction of edge", false, false, "bool");
 
         TCLAP::ValueArg<int> cycle("l", "cycleLenght", "cycle lenght", false, 80, "int");
 
@@ -34,6 +35,8 @@ int main(int argc, char **argv) {
         cmd.add(time_param);
         cmd.add(cleanUp);
         cmd.add(algo);
+        cmd.add(reverse);
+
         cmd.add(cycle);
 
 
@@ -45,6 +48,7 @@ int main(int argc, char **argv) {
         std::string resultFile = resultArg.getValue();
         int window = windowArg.getValue();
         bool timeInMsec = false;
+        bool reverseEdge = reverse.getValue();
         int cleanUpLimit = cleanUp.getValue();
         int cyclelenght = cycle.getValue();
         if (time_param.getValue().compare("sec") != 0) {
@@ -58,22 +62,17 @@ int main(int argc, char **argv) {
         long pend = 0l;
         // findWithLength(inputGraph,resultFile,window,timeInMsec,cleanUpLimit,cyclelenght);
         if (rootAlgo == 0) {
-            findRootNodes(inputGraph, resultFile, window, timeInMsec, cleanUpLimit);
+          //  findRootNodes(inputGraph, resultFile, window, timeInMsec, cleanUpLimit);
+            findAllCycleNaive( inputGraph,  resultFile,  window,  timeInMsec,reverseEdge);
         } else {
-            findRootNodesNew(inputGraph, resultFile, window, timeInMsec, cleanUpLimit);
+            findRootNodesNew(inputGraph, resultFile, window, timeInMsec, cleanUpLimit,reverseEdge);
+
+            pend = timer.LiveElapsedSeconds();
+            std::cout << "Found all root nodes and time " << pend << std::endl;
+            findAllCycle(inputGraph, resultFile, "D:\\dataset\\sms_paths.csv", window, timeInMsec, false,reverseEdge);
         }
-        pend = timer.LiveElapsedSeconds();
-
-        //   findAllCycleNaive( inputGraph,  resultFile,  window,  timeInMsec);
-        std::cout << "Found all root nodes and time " << pend << std::endl;
-
-        findAllCycle(inputGraph, resultFile, "D:\\dataset\\sms_paths.csv", window, timeInMsec, false);
-
         std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
-
         std::cout << "Memory end, " << getMem() << std::endl;
-
-
     } catch (TCLAP::ArgException &e)  // catch any exceptions
     { std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; }
     catch (std::exception &e) {

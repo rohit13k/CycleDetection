@@ -19,7 +19,7 @@
 using namespace std;
 std::map<std::string, std::map<long, std::set<std::string>>> sorteddata;
 
-int readFile(std::string inputFile) {
+int readFile(std::string inputFile,bool reverseEdge) {
 
     ifstream infile(inputFile.c_str());
     string line;
@@ -30,6 +30,10 @@ int readFile(std::string inputFile) {
         templine = Tools::Split(line, ',');
         src = templine[0];
         dst = templine[1];
+        if(reverseEdge){
+            src = templine[1];
+            dst = templine[0];
+        }
         timestamp = stol(templine[2].c_str());
         sorteddata[src][timestamp].insert(dst);
     }

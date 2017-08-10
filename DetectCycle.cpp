@@ -169,7 +169,7 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
     return 0;
 }
 
-int findRootNodesNew(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit) {
+int findRootNodesNew(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit,bool reverseEdge) {
     map<nodeid, map<long, set<nodeid>>> completeSummary;
 
 
@@ -198,6 +198,10 @@ int findRootNodesNew(std::string input, std::string output, int window, bool tim
         templine = Tools::Split(line, ',');
         src = templine[0];
         dst = templine[1];
+        if(reverseEdge){
+            src = templine[1];
+            dst = templine[0];
+        }
         timestamp = stol(templine[2].c_str());
 
         if (src.compare(dst) == 0) {
@@ -281,7 +285,7 @@ set<nodeid> getCandidates(map<long, set<nodeid>> summary, long t_s, long t_e) {
 }
 
 int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string output, int window, bool timeInMsec,
-                 bool usingGlobalBlock) {
+                 bool usingGlobalBlock,bool reverseEdge) {
     long window_bracket = window * 60 * 60;
     double ptime = 0.0;
     if (timeInMsec) {
@@ -290,7 +294,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     string line;
     Platform::Timer timer;
     timer.Start();
-    readFile(dataFile);//creates a data structure of type <srcNode:<time:dstNode>>
+    readFile(dataFile,reverseEdge);//creates a data structure of type <srcNode:<time:dstNode>>
     ptime = timer.LiveElapsedSeconds();
     std::cout << "finished reading " << ptime
               << std::endl;
@@ -518,7 +522,7 @@ void DynamicDFS(nodeid rootnode, long t_s, std::set<std::string> candidates, lon
     }
 }
 
-void findAllCycleNaive(std::string inputGraph, std::string resultFile, long window, long timeInMsec) {
+void findAllCycleNaive(std::string inputGraph, std::string resultFile, long window, long timeInMsec,bool reverseEdge) {
     long window_bracket = window * 60 * 60;
     double ptime = 0.0;
     int count = 0;
@@ -547,6 +551,10 @@ void findAllCycleNaive(std::string inputGraph, std::string resultFile, long wind
         set<string> candidateset;
         src = templine[0];
         dst = templine[1];
+        if(reverseEdge){
+            src = templine[1];
+            dst = templine[0];
+        }
         t_s = stol(templine[2].c_str());
         if (src.compare(dst) != 0) {
             pedge newedge;
