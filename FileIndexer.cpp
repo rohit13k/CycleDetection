@@ -17,9 +17,13 @@
 
 
 using namespace std;
-std::map<std::string, std::map<long, std::set<std::string>>> sorteddata;
+std::map<std::string, std::map<long, std::set<std::string>>> sorteddata;// map<src,map<t,set<dst>>> such that src,dst,t is an edge
 
-int readFile(std::string inputFile,bool reverseEdge) {
+/*
+ * Reads an edge list file and generate an data structure(sorteddata) which is indexed in src node and time of edge.
+ * reverseEdge : Determines if the edge in file needs to read in reverse order
+ */
+int readFile(std::string inputFile, bool reverseEdge) {
 
     ifstream infile(inputFile.c_str());
     string line;
@@ -30,16 +34,21 @@ int readFile(std::string inputFile,bool reverseEdge) {
         templine = Tools::Split(line, ',');
         src = templine[0];
         dst = templine[1];
-        if(reverseEdge){
-            src = templine[1];
-            dst = templine[0];
+        if(src.compare(dst)!=0) {
+            if (reverseEdge) {
+                src = templine[1];
+                dst = templine[0];
+            }
+            timestamp = stol(templine[2].c_str());
+            sorteddata[src][timestamp].insert(dst);
         }
-        timestamp = stol(templine[2].c_str());
-        sorteddata[src][timestamp].insert(dst);
     }
     return 0;
 }
 
+/*
+ * Returns list of edges <src,x,t> such that t is between t_s and t_end and if candidates list is provided x should be in candidates
+ */
 std::set<pedge> getFilteredData(string src, long t_s, long t_end, set<string> *candidates) {
     std::set<pedge> result;
     set<string>::iterator xit;
@@ -54,7 +63,15 @@ std::set<pedge> getFilteredData(string src, long t_s, long t_end, set<string> *c
             //std::cout << low->first << ' ' << low->second << std::endl;
             for (xit = low->second.begin(); xit != low->second.end(); ++xit) {
                 string node = *xit;
-                if (candidates->count(*xit) > 0) {
+                if (candidates->size() == 0) {
+                    //if candidate set is empty add all neighbours
+                    pedge edge1;
+                    edge1.fromVertex = src;
+                    edge1.toVertex = *xit;
+                    edge1.time = low->first;
+                    result.insert(edge1);
+                } else if (candidates->count(*xit) > 0) {
+                    //if candidate set is non empty add only if the neighbour belong to the candidates set
                     pedge edge1;
                     edge1.fromVertex = src;
                     edge1.toVertex = *xit;
@@ -68,6 +85,12 @@ std::set<pedge> getFilteredData(string src, long t_s, long t_end, set<string> *c
     return result;
 }
 
+std::set<pedge> getFilteredData(string src, long t_s, long t_end) {
+    set<string> emptycandidates;
+    return getFilteredData(src, t_s, t_end, &emptycandidates);
+}
+
+// All edges of type x,src,t_x
 std::set<pedge> getFilteredData(string src, long t_s) {
     std::set<pedge> result;
 

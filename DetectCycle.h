@@ -21,7 +21,7 @@ typedef std::map<long, nodeSet> timeGroup;
 int findRootNodes(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit);
 
 int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string output, int window, bool timeInMsec,
-                 bool usingGlobalBlock,bool reverseEdge);
+                 bool isCompressed,bool reverseEdge);
 
 void findCycle(std::string rootNode, long t_s, std::set<std::string> *candidates, long window_bracket);
 
@@ -36,7 +36,7 @@ std::set<long> getAllTime(std::set<pedge> E, nodeid dst);
 
 bool allPath(nodeid w, nodeid rootnode, long t_s, long t_e, std::vector <std::string> path_till_here,
              std::set<std::string> candidates);
-void DynamicDFS(nodeid rootnode,long t_s, std::set<std::string> candidates, long window_bracket);
+void DynamicDFS(nodeid rootnode,long t_s,long t_end, std::set<std::string> candidates, long window_bracket,bool isCompressed);
 
 void findAllCycleNaive(std::string inputGraph,std::string resultFile,long window,long timeInMsec,bool reverseEdge);
 

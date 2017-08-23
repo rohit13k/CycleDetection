@@ -169,7 +169,8 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
     return 0;
 }
 
-int findRootNodesNew(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit,bool reverseEdge) {
+int findRootNodesNew(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit,
+                     bool reverseEdge) {
     map<nodeid, map<long, set<nodeid>>> completeSummary;
 
 
@@ -198,7 +199,7 @@ int findRootNodesNew(std::string input, std::string output, int window, bool tim
         templine = Tools::Split(line, ',');
         src = templine[0];
         dst = templine[1];
-        if(reverseEdge){
+        if (reverseEdge) {
             src = templine[1];
             dst = templine[0];
         }
@@ -219,14 +220,15 @@ int findRootNodesNew(std::string input, std::string output, int window, bool tim
 
                         if (it->second.count(dst) > 0) {
                             //the destination is already in src summary hence a cycle exist
-                            set<nodeid> candidates = getCandidates(completeSummary[src],  -1 * it->first,
-                                                                   ( -1 * it->first) + window_bracket);
+                            set<nodeid> candidates = getCandidates(completeSummary[src], -1 * it->first,
+                                                                   (-1 * it->first) + window_bracket);
                             candidates.erase(dst);
                             candidates.insert(src);
                             if (candidates.size() > 1) {//only cycles having more than 1 nodes
 
                                 result << dst << ",";
-                                result << (-1* it->first) << ",";
+                                result << (-1 * it->first) << ",";//start of cycle
+                                result << timestamp << ","; //end of cycle
                                 for (string x:candidates) {
                                     result << x << ",";
 
@@ -259,7 +261,7 @@ int findRootNodesNew(std::string input, std::string output, int window, bool tim
             //do cleanup
             double parseTime = timer.LiveElapsedSeconds() - ptime;
             ptime = timer.LiveElapsedSeconds();
-            std::cout << "finished parsing, count," << count << "," << parseTime  << ","<<getMem()<<std::endl;
+            std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem() << std::endl;
 
         }
     }
@@ -275,26 +277,28 @@ set<nodeid> getCandidates(map<long, set<nodeid>> summary, long t_s, long t_e) {
     set<nodeid> candidates;
     long time;
     for (map<long, set<nodeid>>::iterator it = summary.begin(); it != summary.end(); ++it) {
-        time=-1* it->first;
-        if (time >= t_s && time< t_e) {
+        time = -1 * it->first;
+        if (time >= t_s && time < t_e) {
 
-            candidates.insert(it->second.begin(),it->second.end());
+            candidates.insert(it->second.begin(), it->second.end());
         }
     }
     return candidates;
 }
 
 int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string output, int window, bool timeInMsec,
-                 bool usingGlobalBlock,bool reverseEdge) {
+                 bool isCompressed, bool reverseEdge) {
     long window_bracket = window * 60 * 60;
     double ptime = 0.0;
     if (timeInMsec) {
         window_bracket = window_bracket * 1000;
     }
+    ofstream cycleResult;
+    cycleResult.open(output.c_str());
     string line;
     Platform::Timer timer;
     timer.Start();
-    readFile(dataFile,reverseEdge);//creates a data structure of type <srcNode:<time:dstNode>>
+    readFile(dataFile, reverseEdge);//creates a data structure of type <srcNode:<time:dstNode>>
     ptime = timer.LiveElapsedSeconds();
     std::cout << "finished reading " << ptime
               << std::endl;
@@ -303,6 +307,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     ifstream infile(rootNodeFile.c_str());
     string rootnode;
     long t_s;
+    long t_end;
     int i = 0;
 
     while (infile >> line) {
@@ -310,35 +315,42 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
         set<string> candidateset;
         rootnode = templine[0];
         t_s = stol(templine[1].c_str());
-        for (i = 2; i < templine.size(); i++) {
+        t_end = stol(templine[2].c_str());
+        t_end = stol(templine[2].c_str());
+        for (i = 3; i < templine.size(); i++) {
             candidateset.insert(templine[i]);
         }
         candidateset.insert(rootnode);
         // findCycle(rootnode, t_s, &candidateset, window_bracket);
         if (candidateset.size() > 2) {
             //run only for cycle with lenght greater than 2
-            DynamicDFS(rootnode, t_s, candidateset, window_bracket);
+            DynamicDFS(rootnode, t_s, t_end + 1, candidateset, window_bracket, isCompressed);
         }
 
     }
-    int cycleLengthArray[50];
+    int cycleLengthArray[50] = {0};
     int cycleLenght;
-    int maxCycleLenght=0;
+    int maxCycleLenght = 0;
     for (auto x:resultAllPath) {
         templine = Tools::Split(x, ',');
-        cycleLenght=stoi(templine[1]);
-        if(cycleLenght<50) {
-            cycleLengthArray[cycleLenght]++;
-            if(cycleLenght>maxCycleLenght){
-                maxCycleLenght=cycleLenght;
-            }
+        cycleLenght = stoi(templine[1]);
+        if (cycleLenght == 6) {
+            cout << x << endl;
         }
-        else
-            cout<<"cycle of length greather than 50 found";
+        if (cycleLenght < 50) {
+            cycleLengthArray[cycleLenght]++;
+            if (cycleLenght > maxCycleLenght) {
+                maxCycleLenght = cycleLenght;
+            }
+        } else
+            cout << "cycle of length greather than 50 found";
+        if (output.compare("") != 0) {
+            cycleResult << x << "\n";
+        }
         //cout << x << endl;
     }
-    for(int i=1;i<=maxCycleLenght;i++){
-        cout <<i<<","<<cycleLengthArray[i] << endl;
+    for (int i = 1; i <= maxCycleLenght; i++) {
+        cout << i << "," << cycleLengthArray[i] << endl;
     }
 }
 
@@ -448,7 +460,7 @@ allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_
             x.time > lastp;
             lastp = x.time;
             if (path_till_here.size() + 1 > 2) {
-                //  std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
+                //   std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
                 std::string resultline = "Found cycle," + to_string(path_till_here.size() + 1) + ",";
                 for (int i = 0; i < path_till_here.size(); i++) {
                     // std::cout << "->" << (path_till_here)[i];
@@ -501,7 +513,8 @@ set<long> getAllTime(set<pedge> E, nodeid dst) {
     return times;
 }
 
-void DynamicDFS(nodeid rootnode, long t_s, std::set<std::string> candidates, long window_bracket) {
+void DynamicDFS(nodeid rootnode, long t_s, long t_end, std::set<std::string> candidates, long window_bracket,
+                bool isCompressed) {
     ct.clear();
     U.clear();
     candidates.insert(rootnode);
@@ -510,19 +523,27 @@ void DynamicDFS(nodeid rootnode, long t_s, std::set<std::string> candidates, lon
         set<pair<nodeid, long>> temp;
         U[x] = temp;
     }
-    set<pedge> neighbours = getFilteredData(rootnode, t_s);// all the edges of type rootnode,*,t_s
+    set<pedge> neighbours;
+    if (isCompressed) {
+        neighbours = getFilteredData(rootnode, t_s,
+                                     t_end);// all the edges of type rootnode,*,t where t is between t_s and t_end
+    } else {
+        neighbours = getFilteredData(rootnode, t_s);// all the edges of type rootnode,*,t_s
+    }
 
     for (auto x:neighbours) {
-        std::set<std::string> tempcandidate = candidates;
+        if (candidates.count(x.toVertex) > 0) {
+            std::set<std::string> tempcandidate = candidates;
 
-        tempcandidate.erase(x.toVertex);
-        vector<std::string> path_till_here;
-        path_till_here.push_back(rootnode + "," + x.toVertex + "," + to_string(x.time));
-        allPath(x.toVertex, rootnode, t_s + 1, t_s + window_bracket, path_till_here, tempcandidate);
+            tempcandidate.erase(x.toVertex);
+            vector<std::string> path_till_here;
+            path_till_here.push_back(rootnode + "," + x.toVertex + "," + to_string(x.time));
+            allPath(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, tempcandidate);
+        }
     }
 }
 
-void findAllCycleNaive(std::string inputGraph, std::string resultFile, long window, long timeInMsec,bool reverseEdge) {
+void findAllCycleNaive(std::string inputGraph, std::string resultFile, long window, long timeInMsec, bool reverseEdge) {
     long window_bracket = window * 60 * 60;
     double ptime = 0.0;
     int count = 0;
@@ -551,7 +572,7 @@ void findAllCycleNaive(std::string inputGraph, std::string resultFile, long wind
         set<string> candidateset;
         src = templine[0];
         dst = templine[1];
-        if(reverseEdge){
+        if (reverseEdge) {
             src = templine[1];
             dst = templine[0];
         }

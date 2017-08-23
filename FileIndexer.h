@@ -41,7 +41,7 @@ struct pedge {
 int readFile(std::string inputFile,bool reverseEdge);
 
 std::set<pedge> getFilteredData(std::string src, long t_s, long t_end, std::set<std::string> *candidates);
-
+std::set<pedge> getFilteredData(std::string src, long t_s, long t_end);
 std::set<pedge> getFilteredData(std::string src, long t_s);
 
 long getMaxTime(std::string src, std::string dst, long t_uper);
