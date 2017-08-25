@@ -59,6 +59,10 @@ int main(int argc, char **argv) {
             timeInMsec = true;
         }
         int rootAlgo = algo.getValue();
+        // 0 : Run naive
+        // 1 : Run Root node finder then cycle detector
+        // 2 : Run Root node finder only
+        // 3 : Run cycle detector only
         // Do what you intend.
         Platform::Timer timer;
         timer.Start();
@@ -71,7 +75,7 @@ int main(int argc, char **argv) {
         } else if (rootAlgo == 1) {
             std::string cycleFile = resultFile;
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");;
-            findRootNodesNew(inputGraph, resultFile, window, timeInMsec, cleanUpLimit, reverseEdge);
+            findRootNodes(inputGraph, resultFile, window, timeInMsec, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and time " << pend << std::endl;
@@ -81,7 +85,7 @@ int main(int argc, char **argv) {
         else if (rootAlgo == 2) {
             std::string cycleFile = resultFile;
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");;
-            findRootNodesNew(inputGraph, resultFile, window, timeInMsec, cleanUpLimit, reverseEdge);
+            findRootNodes(inputGraph, resultFile, window, timeInMsec, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and time " << pend << std::endl;
@@ -93,6 +97,8 @@ int main(int argc, char **argv) {
 
             findAllCycle(inputGraph, resultFile, cycleFile, window, timeInMsec, isCompressed.getValue(), reverseEdge);
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
+        }else{
+            std::cout << "Un defined Algorithm param "<<rootAlgo << std::endl;
         }
 
         std::cout << "Memory end, " << getMem() << std::endl;

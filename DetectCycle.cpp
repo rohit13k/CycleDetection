@@ -18,50 +18,18 @@
 
 using namespace std;
 
-struct tpath {
-    vector<pedge> path;
-    set<nodeid> seen;
-    nodeid rootnode;
-    long t_start;
-
-    bool operator<(const tpath &rhs) const {
-        if (rhs.t_start == t_start) {
-            return rhs.path < path;
-        } else
-            return rhs.t_start < t_start;
-    }
-
-    bool operator==(const tpath &rhs) const {
-        if (rhs.rootnode.compare(rootnode) == 0) {
-            if (rhs.t_start == t_start) {
-                if (path == rhs.path) {
-                    cout << "p" << endl;
-                    return true;
-                } else {
-                    return false;
-                }
-
-
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-};
 
 map<nodeid, timeGroup> rootNodes;
 map<nodeid, long> ct;//closing times
 std::set<string> resultAllPath;
 map<nodeid, set<pair<nodeid, long>>> U;//unblock list
+double_llist last_updated_time_list;
+map<nodeid, nodeSummary> completeSummaryAdvanced;
 
-int findRootNodes(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit) {
-    map<nodeid, timeGroup> completeSummary;
+int findRootNodesAdv(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit,
+                     bool reverseEdge) {
 
-    map<nodeid, timeGroup>::iterator it;
-    timeGroup::iterator timeGroupIt;
-    std::set<nodeid>::iterator itnode;
+
     std::vector<std::string> templine;
     ifstream infile(input.c_str());
     string src, dst;
@@ -76,101 +44,122 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
     long window_bracket = window * 60 * 60;
     double ptime = 0.0;
     string tempnode = "";
-
+    ofstream result;
+    result.open(output.c_str());
+    node *position_in_time_list;
     if (timeInMsec) {
-        window_bracket = window_bracket * 1000;
+        window_bracket = window_bracket * 1000;//convert time in milli seconds
     }
 
     while (infile >> line) {
-        templine = Tools::Split(line, ',');
-        src = templine[0];
-        dst = templine[1];
-        timestamp = stol(templine[2].c_str());
-        negativeTimestamp = -1 * timestamp;
-        if (src.compare(dst) == 0) {
-            //self loop ignored
-        } else {
-            //if src summary exist transfer it to be if in window prune away whats not in window
-            if (completeSummary.count(src) > 0) {
-                set<nodeid> candidateset;
-                candidateset.insert(src);
+        try {
+            templine = Tools::Split(line, ',');
+            src = templine[0];
+            dst = templine[1];
+            if (reverseEdge) {
+                src = templine[1];
+                dst = templine[0];
+            }
+            timestamp = stol(templine[2].c_str());
 
-                for (timeGroupIt = completeSummary.find(src)->second.begin();
-                     timeGroupIt != completeSummary.find(src)->second.end(); ++timeGroupIt) {
-                    temptime = -1 * timeGroupIt->first;
-                    if (timestamp - temptime > window_bracket) {
-                        completeSummary.find(src)->second.erase(timeGroupIt, completeSummary.find(src)->second.end());
-                        break;
-                    }
-                    for (itnode = timeGroupIt->second.begin(); itnode != timeGroupIt->second.end(); ++itnode) {
-                        tempnode = *itnode;
-                        if (tempnode.compare(dst) == 0) {
+            if (src.compare(dst) == 0) {
+                //self loop ignored
+            } else {
 
-                            cycleFound = true;
+                //add src in the destination summary
+                completeSummaryAdvanced[dst].summary[-1 * timestamp].insert(src);
+                //update the position of dst node in time list
+                position_in_time_list = last_updated_time_list.add_begin(timestamp, dst);
+                if (completeSummaryAdvanced[dst].position_in_time_list != NULL) {
+                    last_updated_time_list.delete_element(completeSummaryAdvanced[dst].position_in_time_list);
+                }
+                //save the position of the dst node in time list in the summary
+                completeSummaryAdvanced[dst].position_in_time_list = position_in_time_list;
+                //if src summary exist transfer it to dst  if it is in window prune away whats not in window
+                if (completeSummaryAdvanced.count(src) > 0) {
+                    for (map<long, set<nodeid>>::iterator it = completeSummaryAdvanced[src].summary.begin();
+                         it != completeSummaryAdvanced[src].summary.end(); ++it) {
+                        if ((-1 * it->first) > timestamp - window_bracket) {
 
+                            if (it->second.count(dst) > 0) {
+                                //the destination is already in src summary hence a cycle exist
+                                set<nodeid> candidates = getCandidates(completeSummaryAdvanced[src].summary,
+                                                                       -1 * it->first,
+                                                                       (-1 * it->first) + window_bracket);
+                                candidates.erase(dst);
+                                candidates.insert(src);
+                                if (candidates.size() > 1) {//only cycles having more than 1 nodes
+
+                                    result << dst << ",";
+                                    result << (-1 * it->first) << ",";//start of cycle
+                                    result << timestamp << ","; //end of cycle
+                                    for (string x:candidates) {
+                                        result << x << ",";
+
+                                    }
+                                    result << "\n";
+
+                                }
+                                // add other in the summary
+                                for (auto x:it->second) {
+                                    if (x.compare(dst) != 0) {
+                                        completeSummaryAdvanced[dst].summary[it->first].insert(x);
+                                    }
+                                }
+                            } else {
+                                completeSummaryAdvanced[dst].summary[it->first].insert(it->second.begin(),
+                                                                                       it->second.end());
+                            }
                         } else {
-                            candidateset.insert(tempnode);
-                            completeSummary[dst][timeGroupIt->first].insert(tempnode);
+                            completeSummaryAdvanced[src].summary.erase(it, completeSummaryAdvanced[src].summary.end());
+                            break;
+
+
                         }
                     }
-                    if (cycleFound) {
-                        cycleFound = false;
-                        if (candidateset.size() > 1)
-                            rootNodes[dst][-1 * timeGroupIt->first] = candidateset;
-                    }
                 }
-            }
-            completeSummary[dst][negativeTimestamp].insert(src);
 
-        }
-        count++;
-        if (count % cleanUpLimit == 0) {
-            //do cleanup
-            double parseTime = timer.LiveElapsedSeconds() - ptime;
-            ptime = timer.LiveElapsedSeconds();
-            /*
-            for (it = completeSummary.begin(); it != completeSummary.end(); ++it) {
-                for (timeGroupIt = completeSummary.find(it->first)->second.begin();
-                     timeGroupIt != completeSummary.find(it->first)->second.end(); ++timeGroupIt) {
-                    //  std::cout <<  timestamp - (-1 * itTimedSet->first)<< std::endl;
-                    if (timestamp - (-1 * timeGroupIt->first) > window_bracket) {
-                        completeSummary.find(it->first)->second.erase(timeGroupIt, completeSummary.find(
-                                it->first)->second.end());
-                        break;
-                    }
-                }
-            }
-             */
-            double eraseTime = timer.LiveElapsedSeconds() - ptime;
-            ptime = timer.LiveElapsedSeconds();
-            std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem() << std::endl;
 
+            }
+            count++;
+            if (count % cleanUpLimit == 0) {
+                //do cleanup
+
+                double parseTime = timer.LiveElapsedSeconds() - ptime;
+                ptime = timer.LiveElapsedSeconds();
+
+                std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
+                cout << ",summary size," << completeSummaryAdvanced.size() << " delete count,";
+                   //  << cleanupAdv(timestamp, window_bracket);
+                std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
+            }
+
+        } catch (const std::exception &e) {
+            std::cout << "Caught exception \"" << e.what() << "\"\n";
         }
     }
     std::cout << "finished parsing all " << timer.LiveElapsedSeconds()
               << std::endl;
     timer.Stop();
-    ofstream result;
-    result.open(output.c_str());
-    for (std::map<nodeid, timeGroup>::iterator rootNodesIt = rootNodes.begin();
-         rootNodesIt != rootNodes.end(); ++rootNodesIt) {
 
-
-        for (timeGroupIt = rootNodesIt->second.begin(); timeGroupIt != rootNodesIt->second.end(); ++timeGroupIt) {
-            result << rootNodesIt->first << ",";
-            result << timeGroupIt->first << ",";
-            for (string x:timeGroupIt->second) {
-                result << x << ",";
-            }
-            result << "\n";
-        }
-    }
     result.close();
     return 0;
 }
 
-int findRootNodesNew(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit,
-                     bool reverseEdge) {
+int cleanupAdv(long timestamp, long window_bracket) {
+
+    vector<string> deletelist = last_updated_time_list.get_expired_nodes(timestamp + window_bracket + 1);
+    for (auto x: deletelist) {
+      //  completeSummaryAdvanced.erase(x);
+    }
+  //  last_updated_time_list.delete_expired(timestamp + window_bracket + 1);
+    return deletelist.size();
+
+}
+
+
+int findRootNodes(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit,
+                  bool reverseEdge) {
     map<nodeid, map<long, set<nodeid>>> completeSummary;
 
 
@@ -259,10 +248,13 @@ int findRootNodesNew(std::string input, std::string output, int window, bool tim
         count++;
         if (count % cleanUpLimit == 0) {
             //do cleanup
+
             double parseTime = timer.LiveElapsedSeconds() - ptime;
             ptime = timer.LiveElapsedSeconds();
-            std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem() << std::endl;
-
+            std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
+            cout << ",summary size," << completeSummary.size() << " delete count,"
+                 << cleanup(&completeSummary, timestamp, window_bracket);
+            std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
         }
     }
     std::cout << "finished parsing all " << timer.LiveElapsedSeconds()
@@ -271,6 +263,38 @@ int findRootNodesNew(std::string input, std::string output, int window, bool tim
 
     result.close();
     return 0;
+}
+
+int cleanup(map<nodeid, map<long, set<nodeid>>> *completeSummary, long timestamp, long window_bracket) {
+    int size = 0;
+    string src = "";
+    vector<string> deletelist;
+    for (map<nodeid, map<long, set<nodeid>>>::iterator it = completeSummary->begin();
+         it != completeSummary->end(); ++it) {
+
+        size = it->second.size();
+        src = it->first;
+        if (size > 0) {
+            for (map<long, set<nodeid>>::iterator itinner = it->second.begin();
+                 itinner != it->second.end(); ++itinner) {
+                if ((-1 * itinner->first) < timestamp - window_bracket) {
+                    it->second.erase(itinner, it->second.end());
+                    break;
+                }
+
+            }
+        } else {
+
+            //completeSummary->erase(it);
+            deletelist.push_back(it->first);
+
+        }
+
+    }
+    for (auto x: deletelist) {
+        completeSummary->erase(x);
+    }
+    return deletelist.size();
 }
 
 set<nodeid> getCandidates(map<long, set<nodeid>> summary, long t_s, long t_e) {
@@ -395,9 +419,9 @@ bool findTemporalPath(std::string src, std::string dst, long t_s, long t_end, ve
             found = findTemporalPath(edgeIt->toVertex, dst, edgeIt->time + 1, t_end, path_till_here, seen, candidates);
 
             if (found) {
-                std::cout << "Found cycle: " << path_till_here->size() << " : ";
+                //   std::cout << "Found cycle: " << path_till_here->size() << " : ";
                 for (int i = 0; i < path_till_here->size(); i++) {
-                    std::cout << "->" << (*path_till_here)[i];
+                    //     std::cout << "->" << (*path_till_here)[i];
 
                 }
                 path_till_here->clear();
