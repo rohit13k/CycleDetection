@@ -16,6 +16,7 @@
 #include <set>
 #include <limits>
 #include <algorithm>
+#include <time.h>
 
 using namespace std;
 
@@ -321,6 +322,8 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
                  bool isCompressed, bool reverseEdge) {
     long window_bracket = window * 60 * 60;
     double ptime = 0.0;
+
+    time_t now;
     if (timeInMsec) {
         window_bracket = window_bracket * 1000;
     }
@@ -330,6 +333,8 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     Platform::Timer timer;
     Platform::Timer monitor;
     double monitorTime = 0.0;
+
+
     timer.Start();
     readFile(dataFile, reverseEdge);//creates a data structure of type <srcNode:<time:dstNode>>
     ptime = timer.LiveElapsedSeconds();
@@ -359,16 +364,15 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
         if (candidateset.size() > 2) {
             //run only for cycle with lenght greater than 2
             monitor.Start();
+            monitorTime = time(&now);
             set<int> cyclesfound = DynamicDFS(rootnode, t_s, t_end + 1, candidateset, window_bracket, isCompressed);
-            if (cyclesfound.size() > 0) {
-                cout << "Monitor Time," <<monitor.LiveElapsedSeconds() <<",rootnode, " << rootnode << ",start time," << t_s << ",candidate set size,"
-                     << candidateset.size() << ",#cycles," << cyclesfound.size();
-                for(auto c:cyclesfound){
-                    cout<<","<<c;
-                }
-                cout<<endl;
+            cout << "Monitor Time," << monitor.LiveElapsedSeconds() << ",rootnode, " << rootnode << ",start time," << t_s
+                 << ",candidate set size,";
+            cout << candidateset.size() << ",#cycles," << cyclesfound.size();
+            for (auto c:cyclesfound) {
+                cout << "," << c;
             }
-
+            cout << endl;
 
             monitor.Stop();
         }
@@ -380,9 +384,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     for (auto x:resultAllPath) {
         templine = Tools::Split(x, ',');
         cycleLenght = stoi(templine[1]);
-        if (cycleLenght == 6) {
-            cout << x << endl;
-        }
+
         if (cycleLenght < 50) {
             cycleLengthArray[cycleLenght]++;
             if (cycleLenght > maxCycleLenght) {
@@ -398,6 +400,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     for (int i = 1; i <= maxCycleLenght; i++) {
         cout << i << "," << cycleLengthArray[i] << endl;
     }
+    
 }
 
 void findCycle(std::string rootNode, long t_s, std::set<std::string> *candidates, long window_bracket) {
@@ -508,7 +511,7 @@ allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_
             lastp = x.time;
             if (path_till_here.size() + 1 > 2) {
                 //   std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
-                cyclelenght=path_till_here.size() + 1;
+                cyclelenght = path_till_here.size() + 1;
                 std::string resultline = "Found cycle," + to_string(cyclelenght) + ",";
                 cycleFound->insert(cyclelenght);
                 for (int i = 0; i < path_till_here.size(); i++) {
