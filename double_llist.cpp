@@ -42,7 +42,12 @@ void double_llist::create_list(long updatetime, string nodeid) {
 *  delete the given node from list
 */
 void double_llist::delete_element(node *thisNode) {
+    if(thisNode->next==NULL){
+        //last element in the list is being deleted
+        endNode=thisNode->prev;
+    }
    thisNode->prev->next = thisNode->next;
+
     free(thisNode);
 }
 
@@ -149,7 +154,7 @@ int double_llist::delete_expired(long current_time) {
 
 
 vector<string> double_llist::get_expired_nodes(long current_time) {
-    struct node *q, *temp;
+    struct node *q;
     vector<string>  expired_node;
     if (start == NULL) {
         cout << "List empty,nothing to delete" << endl;
@@ -158,15 +163,12 @@ vector<string> double_llist::get_expired_nodes(long current_time) {
     q = endNode;
 
 
-    while (q != NULL) {
+    while (q->prev != NULL) {
 
-        temp = q;
-        q = q->prev;
-        if (temp->updatetime < current_time) {
-            q->next = NULL;
-            temp->prev = NULL;
-            expired_node.push_back(temp->nodeid);
 
+        if (q->updatetime < current_time) {
+           expired_node.push_back(q->nodeid);
+            q = q->prev;
         } else {
             return expired_node;
         }

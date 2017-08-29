@@ -15,6 +15,7 @@
 #include <map>
 #include <set>
 #include <limits>
+#include <algorithm>
 
 using namespace std;
 
@@ -23,13 +24,13 @@ map<nodeid, timeGroup> rootNodes;
 map<nodeid, long> ct;//closing times
 std::set<string> resultAllPath;
 map<nodeid, set<pair<nodeid, long>>> U;//unblock list
-double_llist last_updated_time_list;
-map<nodeid, nodeSummary> completeSummaryAdvanced;
+
 
 int findRootNodesAdv(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit,
                      bool reverseEdge) {
 
-
+    double_llist last_updated_time_list;
+    map<nodeid, nodeSummary> completeSummaryAdvanced;
     std::vector<std::string> templine;
     ifstream infile(input.c_str());
     string src, dst;
@@ -71,7 +72,11 @@ int findRootNodesAdv(std::string input, std::string output, int window, bool tim
                 //update the position of dst node in time list
                 position_in_time_list = last_updated_time_list.add_begin(timestamp, dst);
                 if (completeSummaryAdvanced[dst].position_in_time_list != NULL) {
+                    cout << "before delete" << endl;
+                    last_updated_time_list.display_dlist();
                     last_updated_time_list.delete_element(completeSummaryAdvanced[dst].position_in_time_list);
+                    cout << "after delete" << endl;
+                    last_updated_time_list.display_dlist();
                 }
                 //save the position of the dst node in time list in the summary
                 completeSummaryAdvanced[dst].position_in_time_list = position_in_time_list;
@@ -130,7 +135,7 @@ int findRootNodesAdv(std::string input, std::string output, int window, bool tim
 
                 std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
                 cout << ",summary size," << completeSummaryAdvanced.size() << " delete count,";
-                   //  << cleanupAdv(timestamp, window_bracket);
+                cout << cleanupAdv(timestamp, window_bracket, &last_updated_time_list);
                 std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
             }
 
@@ -146,13 +151,15 @@ int findRootNodesAdv(std::string input, std::string output, int window, bool tim
     return 0;
 }
 
-int cleanupAdv(long timestamp, long window_bracket) {
+int cleanupAdv(long timestamp, long window_bracket, double_llist *last_updated_time_list) {
 
-    vector<string> deletelist = last_updated_time_list.get_expired_nodes(timestamp + window_bracket + 1);
+    long time = timestamp + window_bracket + 1;
+    vector<string> deletelist = last_updated_time_list->get_expired_nodes(time);
     for (auto x: deletelist) {
-      //  completeSummaryAdvanced.erase(x);
+        //  completeSummaryAdvanced.erase(x);
     }
-  //  last_updated_time_list.delete_expired(timestamp + window_bracket + 1);
+    //  last_updated_time_list.delete_expired(timestamp + window_bracket + 1);
+
     return deletelist.size();
 
 }
@@ -321,9 +328,12 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     cycleResult.open(output.c_str());
     string line;
     Platform::Timer timer;
+    Platform::Timer monitor;
+    double monitorTime = 0.0;
     timer.Start();
     readFile(dataFile, reverseEdge);//creates a data structure of type <srcNode:<time:dstNode>>
     ptime = timer.LiveElapsedSeconds();
+
     std::cout << "finished reading " << ptime
               << std::endl;
 
@@ -348,7 +358,19 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
         // findCycle(rootnode, t_s, &candidateset, window_bracket);
         if (candidateset.size() > 2) {
             //run only for cycle with lenght greater than 2
-            DynamicDFS(rootnode, t_s, t_end + 1, candidateset, window_bracket, isCompressed);
+            monitor.Start();
+            set<int> cyclesfound = DynamicDFS(rootnode, t_s, t_end + 1, candidateset, window_bracket, isCompressed);
+            if (cyclesfound.size() > 0) {
+                cout << "Monitor Time," <<monitor.LiveElapsedSeconds() <<",rootnode, " << rootnode << ",start time," << t_s << ",candidate set size,"
+                     << candidateset.size() << ",#cycles," << cyclesfound.size();
+                for(auto c:cyclesfound){
+                    cout<<","<<c;
+                }
+                cout<<endl;
+            }
+
+
+            monitor.Stop();
         }
 
     }
@@ -473,11 +495,12 @@ void unblock(nodeid v, long t_v, long t_e) {
 
 bool
 allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_till_here,
-        std::set<std::string> candidates) {
+        std::set<std::string> candidates, set<int> *cycleFound) {
     ct[w] = t_s;
     long lastp = 0;
     set<pedge> E = getFilteredData(w, t_s, t_e, &candidates);
     set<nodeid> V;
+    int cyclelenght;
     for (auto x: E) {
         V.insert(x.toVertex);
         if (x.toVertex.compare(rootnode) == 0) {
@@ -485,7 +508,9 @@ allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_
             lastp = x.time;
             if (path_till_here.size() + 1 > 2) {
                 //   std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
-                std::string resultline = "Found cycle," + to_string(path_till_here.size() + 1) + ",";
+                cyclelenght=path_till_here.size() + 1;
+                std::string resultline = "Found cycle," + to_string(cyclelenght) + ",";
+                cycleFound->insert(cyclelenght);
                 for (int i = 0; i < path_till_here.size(); i++) {
                     // std::cout << "->" << (path_till_here)[i];
                     resultline = resultline + "," + (path_till_here)[i];
@@ -508,7 +533,7 @@ allPath(nodeid w, nodeid rootnode, long t_s, long t_e, vector<std::string> path_
             newcand.erase(x);
             vector<std::string> newpath = path_till_here;
             newpath.push_back(w + "," + x + "," + to_string(t_min));
-            bool pathFound = allPath(x, rootnode, t_min + 1, t_e, newpath, newcand);
+            bool pathFound = allPath(x, rootnode, t_min + 1, t_e, newpath, newcand, cycleFound);
             if (ct[x] <= t_min || !pathFound) {
                 time_x.clear();
                 U[x].insert(make_pair(w, t_min));
@@ -537,11 +562,12 @@ set<long> getAllTime(set<pedge> E, nodeid dst) {
     return times;
 }
 
-void DynamicDFS(nodeid rootnode, long t_s, long t_end, std::set<std::string> candidates, long window_bracket,
-                bool isCompressed) {
+set<int> DynamicDFS(nodeid rootnode, long t_s, long t_end, std::set<std::string> candidates, long window_bracket,
+                    bool isCompressed) {
     ct.clear();
     U.clear();
     candidates.insert(rootnode);
+    set<int> cycleFound;
     for (auto x:candidates) {
         ct[x] = std::numeric_limits<long>::max();
         set<pair<nodeid, long>> temp;
@@ -562,9 +588,10 @@ void DynamicDFS(nodeid rootnode, long t_s, long t_end, std::set<std::string> can
             tempcandidate.erase(x.toVertex);
             vector<std::string> path_till_here;
             path_till_here.push_back(rootnode + "," + x.toVertex + "," + to_string(x.time));
-            allPath(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, tempcandidate);
+            allPath(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, tempcandidate, &cycleFound);
         }
     }
+    return cycleFound;
 }
 
 void findAllCycleNaive(std::string inputGraph, std::string resultFile, long window, long timeInMsec, bool reverseEdge) {

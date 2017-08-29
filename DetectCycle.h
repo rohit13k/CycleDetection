@@ -72,12 +72,12 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
 std::set<long> getAllTime(std::set<pedge> E, nodeid dst);
 
 bool allPath(nodeid w, nodeid rootnode, long t_s, long t_e, std::vector <std::string> path_till_here,
-             std::set<std::string> candidates);
-void DynamicDFS(nodeid rootnode,long t_s,long t_end, std::set<std::string> candidates, long window_bracket,bool isCompressed);
+             std::set<std::string> candidates, std::set<int> *cycleFound);
+std::set<int> DynamicDFS(nodeid rootnode,long t_s,long t_end, std::set<std::string> candidates, long window_bracket,bool isCompressed);
 
 void findAllCycleNaive(std::string inputGraph,std::string resultFile,long window,long timeInMsec,bool reverseEdge);
 int cleanup(std::map<nodeid,std::map<long, std::set<nodeid>>> *completeSummary,long timestamp,long window_bracket);
-int cleanupAdv(long timestamp,long window_bracket);
+int cleanupAdv(long timestamp,long window_bracket,double_llist *last_updated_time_list);
 
 int findRootNodesAdv(std::string input, std::string output, int window, bool timeInMsec,int cleanUpLimit,bool reverseEdge);
 #endif //CYCLEDETECTION_DETECTCYCLEROOT_H
