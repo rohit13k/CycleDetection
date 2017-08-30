@@ -256,8 +256,9 @@ int findRootNodes(std::string input, std::string output, int window,  int cleanU
             double parseTime = timer.LiveElapsedSeconds() - ptime;
             ptime = timer.LiveElapsedSeconds();
             std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
-            cout << ",summary size," << completeSummary.size() << " delete count,"
-                 << cleanup(&completeSummary, timestamp, window_bracket);
+            cout << ",summary size," << completeSummary.size();
+            cout << ",memory," << getMem();
+            cout << " ,delete count," << cleanup(&completeSummary, timestamp, window_bracket);
             std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
         }
     }
