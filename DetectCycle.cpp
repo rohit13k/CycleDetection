@@ -27,7 +27,7 @@ std::set<string> resultAllPath;
 map<nodeid, set<pair<nodeid, long>>> U;//unblock list
 
 
-int findRootNodesAdv(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit,
+int findRootNodesAdv(std::string input, std::string output, int window,  int cleanUpLimit,
                      bool reverseEdge) {
 
     double_llist last_updated_time_list;
@@ -49,9 +49,7 @@ int findRootNodesAdv(std::string input, std::string output, int window, bool tim
     ofstream result;
     result.open(output.c_str());
     node *position_in_time_list;
-    if (timeInMsec) {
-        window_bracket = window_bracket * 1000;//convert time in milli seconds
-    }
+
 
     while (infile >> line) {
         try {
@@ -166,7 +164,7 @@ int cleanupAdv(long timestamp, long window_bracket, double_llist *last_updated_t
 }
 
 
-int findRootNodes(std::string input, std::string output, int window, bool timeInMsec, int cleanUpLimit,
+int findRootNodes(std::string input, std::string output, int window,  int cleanUpLimit,
                   bool reverseEdge) {
     map<nodeid, map<long, set<nodeid>>> completeSummary;
 
@@ -188,9 +186,7 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
     ofstream result;
     result.open(output.c_str());
 
-    if (timeInMsec) {
-        window_bracket = window_bracket * 1000;//convert time in milli seconds
-    }
+
 
     while (infile >> line) {
         templine = Tools::Split(line, ',');
@@ -200,7 +196,7 @@ int findRootNodes(std::string input, std::string output, int window, bool timeIn
             src = templine[1];
             dst = templine[0];
         }
-        timestamp = stol(templine[2].c_str());
+        timestamp = stol(templine[2].substr(0,10).c_str());
 
         if (src.compare(dst) == 0) {
             //self loop ignored
@@ -318,15 +314,13 @@ set<nodeid> getCandidates(map<long, set<nodeid>> summary, long t_s, long t_e) {
     return candidates;
 }
 
-int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string output, int window, bool timeInMsec,
+int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string output, int window,
                  bool isCompressed, bool reverseEdge) {
     long window_bracket = window * 60 * 60;
     double ptime = 0.0;
 
     time_t now;
-    if (timeInMsec) {
-        window_bracket = window_bracket * 1000;
-    }
+
     ofstream cycleResult;
     cycleResult.open(output.c_str());
     string line;
@@ -400,7 +394,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     for (int i = 1; i <= maxCycleLenght; i++) {
         cout << i << "," << cycleLengthArray[i] << endl;
     }
-    
+
 }
 
 void findCycle(std::string rootNode, long t_s, std::set<std::string> *candidates, long window_bracket) {
@@ -597,13 +591,11 @@ set<int> DynamicDFS(nodeid rootnode, long t_s, long t_end, std::set<std::string>
     return cycleFound;
 }
 
-void findAllCycleNaive(std::string inputGraph, std::string resultFile, long window, long timeInMsec, bool reverseEdge) {
+void findAllCycleNaive(std::string inputGraph, std::string resultFile, long window, bool reverseEdge) {
     long window_bracket = window * 60 * 60;
     double ptime = 0.0;
     int count = 0;
-    if (timeInMsec) {
-        window_bracket = window_bracket * 1000;
-    }
+
     string line;
     Platform::Timer timer;
     timer.Start();
