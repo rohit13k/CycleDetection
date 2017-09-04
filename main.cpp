@@ -24,17 +24,18 @@ int main(int argc, char **argv) {
         TCLAP::ValueArg<int> windowArg("w", "window", "time window in hours", false, 1, "int");
         TCLAP::ValueArg<std::string> resultArg("o", "result", "path to store the result", true, "", "string");
 
-        TCLAP::ValueArg<int> cleanUp("c", "cleanUpLimit", "clean up size", false, 10000, "int");
+        TCLAP::ValueArg<int> cleanUp("p", "cleanUpLimit", "clean up size", false, 10000, "int");
         TCLAP::ValueArg<int> algo("a", "rootAlgo", "algorithm to find root 0 old 1 new", false, 1, "int");
         TCLAP::ValueArg<bool> reverse("r", "reverseDirection", "reverse Direction of edge", false, false, "bool");
         TCLAP::ValueArg<bool> isCompressed("z", "isCompressed", "the root node is compressed", false, false, "bool");
-
+        TCLAP::ValueArg<bool> is_candidates_provided("c", "is_candidates_provided", "candidate list is provided", false,
+                                                     true, "bool");
         TCLAP::ValueArg<int> cycle("l", "cycleLenght", "cycle lenght", false, 80, "int");
 
         cmd.add(inputGraphArg);
         cmd.add(windowArg);
         cmd.add(resultArg);
-
+        cmd.add(is_candidates_provided);
         cmd.add(cleanUp);
         cmd.add(algo);
         cmd.add(reverse);
@@ -51,7 +52,7 @@ int main(int argc, char **argv) {
 
         std::string resultFile = resultArg.getValue();
         int window = windowArg.getValue();
-
+        bool candidates_provided = is_candidates_provided.getValue();
         bool reverseEdge = reverse.getValue();
         int cleanUpLimit = cleanUp.getValue();
         int cyclelenght = cycle.getValue();
@@ -69,7 +70,7 @@ int main(int argc, char **argv) {
         // findWithLength(inputGraph,resultFile,window,timeInMsec,cleanUpLimit,cyclelenght);
         if (rootAlgo == 0) {
             //  findRootNodes(inputGraph, resultFile, window, timeInMsec, cleanUpLimit);
-            findAllCycleNaive(inputGraph, resultFile, window,  reverseEdge);
+            findAllCycleNaive(inputGraph, resultFile, window, reverseEdge);
         } else if (rootAlgo == 1) {
             std::string cycleFile = resultFile;
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");;
@@ -77,26 +78,26 @@ int main(int argc, char **argv) {
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and time " << pend << std::endl;
-            findAllCycle(inputGraph, resultFile, cycleFile, window,  isCompressed.getValue(), reverseEdge);
+            findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
+                         candidates_provided);
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
-        }
-        else if (rootAlgo == 2) {
+        } else if (rootAlgo == 2) {
             std::string cycleFile = resultFile;
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");;
-            findRootNodes(inputGraph, resultFile, window,  cleanUpLimit, reverseEdge);
+            findRootNodes(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and time " << pend << std::endl;
 
-        }
-        else if (rootAlgo == 3) {
+        } else if (rootAlgo == 3) {
             std::string cycleFile = resultFile;
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");;
 
-            findAllCycle(inputGraph, resultFile, cycleFile, window,  isCompressed.getValue(), reverseEdge);
+            findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
+                         candidates_provided);
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
-        }else{
-            std::cout << "Un defined Algorithm param "<<rootAlgo << std::endl;
+        } else {
+            std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
         }
 
         std::cout << "Memory end, " << getMem() << std::endl;
