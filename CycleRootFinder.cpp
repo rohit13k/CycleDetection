@@ -20,7 +20,7 @@ using namespace std;
  * Output file format: rootnode,start_time_cycle,neighbour_node resulting in cycle
  */
 int findRootNodesApprox(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge) {
-    map<string, map<long, set<long>>> completeSummary;
+    map<string, set<tnode>> completeSummary;
 
     std::hash<std::string> str_hash;
     std::vector<std::string> templine;
@@ -39,7 +39,7 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
     string tempnode = "";
     ofstream result;
     result.open(output.c_str());
-
+    std::set<tnode>::iterator temp_tnode_it;
 
     while (infile >> line) {
         templine = Tools::Split(line, ',');
@@ -57,38 +57,45 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
         } else {
 
             //add src in the destination summary
-            completeSummary[dst][-1 * timestamp].insert(str_hash(src));
+            tnode tnodeSrc;
+            tnodeSrc.vertex = src;
+            tnodeSrc.time = timestamp;
+
+            completeSummary[dst].insert(tnodeSrc);
 
             //if src summary exist transfer it to dst  if it is in window prune away whats not in window
             if (completeSummary.count(src) > 0) {
-                for (map<long, set<long>>::iterator it = completeSummary[src].begin();
+                for (set<tnode>::iterator it = completeSummary[src].begin();
                      it != completeSummary[src].end(); ++it) {
-                    if ((-1 * it->first) > timestamp - window_bracket) {
+                    if ((it->time) > timestamp - window_bracket) {
 
-                        if (it->second.count(str_hash(dst)) > 0) {
+                        if (it->vertex.compare(dst) == 0) {
                             //the destination is already in src summary hence a cycle exist
-                            int candidate_size = getCandidatesSize(completeSummary[src], -1 * it->first,
-                                                                   (-1 * it->first) + window_bracket);
-                            if (candidate_size > 1) {
-                                result << dst << ",";
-                                result << (-1 * it->first) << ",";//start of cycle
-                                result << timestamp << ","; //end of cycle
+                            set<nodeid> candidates = getCandidatesSize(completeSummary[src], it->time,
+                                                                       it->time + window_bracket);
+                            candidates.erase(dst);
+                            candidates.insert(src);
+                            if (candidates.size() > 1) {//only cycles having more than 1 nodes
 
+                                result << dst << ",";
+                                result << it->time << ",";//start of cycle
+                                result << timestamp << ","; //end of cycle
+                                for (string x:candidates) {
+                                    result << x << ",";
+
+                                }
                                 result << "\n";
 
                             }
-                            // add other in the summary
-                            for (auto x:it->second) {
-                                if (x != str_hash(dst)) {
-                                    completeSummary[dst][it->first].insert(x);
-                                }
-                            }
+
                         } else {
-                            completeSummary[dst][it->first].insert(it->second.begin(), it->second.end());
+
+                            completeSummary[dst].insert(*it);
+
                         }
                     } else {
-                        completeSummary[src].erase(it, completeSummary[src].end());
-                        break;
+                        completeSummary[src].erase(it);
+
 
 
                     }
@@ -103,7 +110,7 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
 
             double parseTime = timer.LiveElapsedSeconds() - ptime;
             ptime = timer.LiveElapsedSeconds();
-            int cleanupsize=cleanup(&completeSummary, timestamp, window_bracket);
+            int cleanupsize = cleanup(&completeSummary, timestamp, window_bracket);
             std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
             cout << ",summary size," << completeSummary.size();
             cout << ",memory," << getMem();
@@ -120,31 +127,27 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
     return 0;
 }
 
-int cleanup(map<string, map<long, set<long>>> *completeSummary, long timestamp, long window_bracket) {
+int cleanup(map<string, set<tnode>> *completeSummary, long timestamp, long window_bracket) {
     int size = 0;
     string src = "";
     vector<string> deletelist;
-    int max_value_size = 0;
-    int max_set_size = 0;
-    for (map<string, map<long, set<long>>>::iterator it = completeSummary->begin();
+
+    for (map<string, set<tnode>>::iterator it = completeSummary->begin();
          it != completeSummary->end(); ++it) {
+
 
         size = it->second.size();
         src = it->first;
         if (size > 0) {
-            for (map<long, set<long>>::iterator itinner = it->second.begin();
+            for (set<tnode>::iterator itinner = it->second.begin();
                  itinner != it->second.end(); ++itinner) {
-                if ((-1 * itinner->first) < timestamp - window_bracket) {
-                    it->second.erase(itinner, it->second.end());
-                    break;
+                if (itinner->time < timestamp - window_bracket) {
+                    it->second.erase(itinner);
+
                 }
-                if (itinner->second.size() > max_set_size) {
-                    max_set_size = itinner->second.size();
-                }
+
             }
-            if (it->second.size() > max_value_size) {
-                max_value_size = it->second.size();
-            }
+
         } else {
 
             //completeSummary->erase(it);
@@ -152,23 +155,24 @@ int cleanup(map<string, map<long, set<long>>> *completeSummary, long timestamp, 
 
         }
 
+
     }
     for (auto x: deletelist) {
         completeSummary->erase(x);
     }
-    cout<<"max # of times "<<max_value_size<<" max set size "<<max_set_size<<endl;
+
     return deletelist.size();
 }
 
-int getCandidatesSize(map<long, set<long>> summary, long t_s, long t_e) {
-    set<long> candidates;
+set<string> getCandidatesSize(set<tnode> summary, long t_s, long t_e) {
+    set<string> candidates;
     long time;
-    for (map<long, set<long>>::iterator it = summary.begin(); it != summary.end(); ++it) {
-        time = -1 * it->first;
-        if (time >= t_s && time < t_e) {
+    for (set<tnode>::iterator it = summary.begin(); it != summary.end(); ++it) {
 
-            candidates.insert(it->second.begin(), it->second.end());
+        if (it->time >= t_s && time < t_e) {
+
+            candidates.insert(it->vertex);
         }
     }
-    return candidates.size();
+    return candidates;
 }
