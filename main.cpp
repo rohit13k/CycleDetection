@@ -10,6 +10,7 @@
 #include <string>
 #include "Timer.h"
 #include "MemoryMonitor.h"
+#include "CycleRootFinder.h"
 
 int main(int argc, char **argv) {
     // Wrap everything in a try block.  Do this every time,
@@ -96,6 +97,13 @@ int main(int argc, char **argv) {
             findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
                          candidates_provided);
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
+        } else if (rootAlgo == 4) {
+            std::string cycleFile = resultFile;
+            cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");;
+            findRootNodesApprox(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
+
+            pend = timer.LiveElapsedSeconds();
+            std::cout << "Found all root nodes and time " << pend << std::endl;
         } else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
         }
