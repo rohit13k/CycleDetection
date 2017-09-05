@@ -68,7 +68,7 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
                         if (it->second.count(str_hash(dst)) > 0) {
                             //the destination is already in src summary hence a cycle exist
                             int candidate_size = getCandidatesSize(completeSummary[src], -1 * it->first,
-                                                           (-1 * it->first) + window_bracket);
+                                                                   (-1 * it->first) + window_bracket);
                             if (candidate_size > 1) {
                                 result << dst << ",";
                                 result << (-1 * it->first) << ",";//start of cycle
@@ -103,10 +103,11 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
 
             double parseTime = timer.LiveElapsedSeconds() - ptime;
             ptime = timer.LiveElapsedSeconds();
+            int cleanupsize=cleanup(&completeSummary, timestamp, window_bracket);
             std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
             cout << ",summary size," << completeSummary.size();
             cout << ",memory," << getMem();
-            cout << " ,delete count," << cleanup(&completeSummary, timestamp, window_bracket);
+            cout << " ,delete count," << cleanupsize;
             std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
         }
     }
@@ -118,10 +119,13 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
     result.close();
     return 0;
 }
+
 int cleanup(map<string, map<long, set<long>>> *completeSummary, long timestamp, long window_bracket) {
     int size = 0;
     string src = "";
     vector<string> deletelist;
+    int max_value_size = 0;
+    int max_set_size = 0;
     for (map<string, map<long, set<long>>>::iterator it = completeSummary->begin();
          it != completeSummary->end(); ++it) {
 
@@ -134,7 +138,12 @@ int cleanup(map<string, map<long, set<long>>> *completeSummary, long timestamp, 
                     it->second.erase(itinner, it->second.end());
                     break;
                 }
-
+                if (itinner->second.size() > max_set_size) {
+                    max_set_size = itinner->second.size();
+                }
+            }
+            if (it->second.size() > max_value_size) {
+                max_value_size = it->second.size();
             }
         } else {
 
@@ -147,6 +156,7 @@ int cleanup(map<string, map<long, set<long>>> *completeSummary, long timestamp, 
     for (auto x: deletelist) {
         completeSummary->erase(x);
     }
+    cout<<"max # of times "<<max_value_size<<" max set size "<<max_set_size<<endl;
     return deletelist.size();
 }
 
