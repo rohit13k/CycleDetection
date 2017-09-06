@@ -20,7 +20,7 @@ using namespace std;
  * Output file format: rootnode,start_time_cycle,neighbour_node resulting in cycle
  */
 int findRootNodesApprox(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge) {
-    map<string, set<tnode>> completeSummary;
+    map<string, map<string,long>> completeSummary;
 
     std::hash<std::string> str_hash;
     std::vector<std::string> templine;
@@ -40,11 +40,17 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
     ofstream result;
     result.open(output.c_str());
     std::set<tnode>::iterator temp_tnode_it;
-
+    vector<string> all_data;
     while (infile >> line) {
+        all_data.push_back(line);
+    }
+    cout<<all_data.size()<<endl;
+    for(int j=all_data.size()-1;j>=0;j--) {
+        line=all_data[j];
         templine = Tools::Split(line, ',');
         src = templine[0];
         dst = templine[1];
+
 
         if (reverseEdge) {
             src = templine[1];
@@ -57,29 +63,29 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
         } else {
 
             //add src in the destination summary
+          /*
             tnode tnodeSrc;
             tnodeSrc.vertex = src;
             tnodeSrc.time = timestamp;
-
-            completeSummary[dst].insert(tnodeSrc);
+            */
+            completeSummary[src][dst]=timestamp;
 
             //if src summary exist transfer it to dst  if it is in window prune away whats not in window
-            if (completeSummary.count(src) > 0) {
-                for (set<tnode>::iterator it = completeSummary[src].begin();
-                     it != completeSummary[src].end(); ++it) {
-                    if ((it->time) > timestamp - window_bracket) {
+            if (completeSummary.count(dst) > 0) {
+                for (map<string,long>::iterator it = completeSummary[dst].begin();
+                     it != completeSummary[dst].end(); ++it) {
+                    if ((it->second-timestamp) <  window_bracket) {
 
-                        if (it->vertex.compare(dst) == 0) {
+                        if (it->first.compare(src) == 0) {
                             //the destination is already in src summary hence a cycle exist
-                            set<nodeid> candidates = getCandidatesSize(completeSummary[src], it->time,
-                                                                       it->time + window_bracket);
-                            candidates.erase(dst);
-                            candidates.insert(src);
+                            set<nodeid> candidates = getCandidates(completeSummary[dst], timestamp, timestamp + window_bracket);
+                            candidates.erase(src);
+                            candidates.insert(dst);
                             if (candidates.size() > 1) {//only cycles having more than 1 nodes
 
-                                result << dst << ",";
-                                result << it->time << ",";//start of cycle
-                                result << timestamp << ","; //end of cycle
+                                result << src << ",";
+                                result << timestamp << ",";//start of cycle
+                                result << timestamp + window_bracket << ","; //end of cycle
                                 for (string x:candidates) {
                                     result << x << ",";
 
@@ -90,12 +96,18 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
 
                         } else {
 
-                            completeSummary[dst].insert(*it);
+                            if(completeSummary[src].count(it->first)>0){
+                                if(completeSummary[src][it->first]>it->second){
+                                    completeSummary[src][it->first]=it->second;
+                                }
+                            }else{
+                                completeSummary[src][it->first]=it->second;
+                            }
+
 
                         }
                     } else {
-                        completeSummary[src].erase(it);
-
+                        completeSummary[dst].erase(it);
 
 
                     }
@@ -127,21 +139,24 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
     return 0;
 }
 
-int cleanup(map<string, set<tnode>> *completeSummary, long timestamp, long window_bracket) {
+int cleanup(map<string, map<string,long>> *completeSummary, long timestamp, long window_bracket) {
     int size = 0;
     string src = "";
     vector<string> deletelist;
-
-    for (map<string, set<tnode>>::iterator it = completeSummary->begin();
+    int max_size = 0;
+    for (map<string, map<string,long>>::iterator it = completeSummary->begin();
          it != completeSummary->end(); ++it) {
 
 
         size = it->second.size();
         src = it->first;
+        if (size > max_size) {
+            max_size = size;
+        }
         if (size > 0) {
-            for (set<tnode>::iterator itinner = it->second.begin();
+            for (map<string,long>::iterator itinner = it->second.begin();
                  itinner != it->second.end(); ++itinner) {
-                if (itinner->time < timestamp - window_bracket) {
+                if (itinner->second- timestamp>  window_bracket) {
                     it->second.erase(itinner);
 
                 }
@@ -160,18 +175,18 @@ int cleanup(map<string, set<tnode>> *completeSummary, long timestamp, long windo
     for (auto x: deletelist) {
         completeSummary->erase(x);
     }
-
+    cout << "max set size " << max_size<<endl;
     return deletelist.size();
 }
 
-set<string> getCandidatesSize(set<tnode> summary, long t_s, long t_e) {
+set<string> getCandidates(map<string,long> summary, long t_s, long t_e) {
     set<string> candidates;
-    long time;
-    for (set<tnode>::iterator it = summary.begin(); it != summary.end(); ++it) {
 
-        if (it->time >= t_s && time < t_e) {
+    for (map<string,long>::iterator it = summary.begin(); it != summary.end(); ++it) {
 
-            candidates.insert(it->vertex);
+        if (it->second >= t_s && it->second < (t_e+1)) {
+
+            candidates.insert(it->first);
         }
     }
     return candidates;
