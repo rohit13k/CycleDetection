@@ -34,8 +34,8 @@ struct tnode {
 
 int findRootNodesApprox(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge);
 
-int cleanup(std::map<string, map<string,long>> *completeSummary, long timestamp, long window_bracket);
+int cleanup(std::map<int, map<int,int>> *completeSummary, int timestamp, int window_bracket);
 
-set<string> getCandidates(std::map<string,long> summary, long t_s, long t_e);
+set<int> getCandidates(std::map<int,int> *summary, int t_s, int t_e);
 
 #endif //CYCLEDETECTION_CYCLEROOTFINDER_H
