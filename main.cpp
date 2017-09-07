@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
         } else if (rootAlgo == 2) {
             std::string cycleFile = resultFile;
-            cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");;
+
             findRootNodes(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
@@ -92,14 +92,21 @@ int main(int argc, char **argv) {
 
         } else if (rootAlgo == 3) {
             std::string cycleFile = resultFile;
-            cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");;
+            cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");
 
             findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
                          candidates_provided);
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
         } else if (rootAlgo == 4) {
             std::string cycleFile = resultFile;
-            cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");;
+
+            findRootNodesNew(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
+
+            pend = timer.LiveElapsedSeconds();
+            std::cout << "Found all root nodes and time " << pend << std::endl;
+        }else if (rootAlgo == 5) {
+            std::string cycleFile = resultFile;
+
             findRootNodesApprox(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
