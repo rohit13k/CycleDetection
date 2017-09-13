@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
         } else if (rootAlgo == 1) {
             std::string cycleFile = resultFile;
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");;
-            findRootNodes(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
+            findRootNodesNew(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and time " << pend << std::endl;
@@ -83,14 +83,13 @@ int main(int argc, char **argv) {
                          candidates_provided);
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
         } else if (rootAlgo == 2) {
-            std::string cycleFile = resultFile;
-
             findRootNodes(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and time " << pend << std::endl;
 
         } else if (rootAlgo == 3) {
+            //find cycles with the root folder and candidates
             std::string cycleFile = resultFile;
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");
 
@@ -98,19 +97,31 @@ int main(int argc, char **argv) {
                          candidates_provided);
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
         } else if (rootAlgo == 4) {
-            std::string cycleFile = resultFile;
-
+            // find root node using new method
             findRootNodesNew(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and time " << pend << std::endl;
-        }else if (rootAlgo == 5) {
-            std::string cycleFile = resultFile;
-
+        } else if (rootAlgo == 5) {
+            //find root node using bloom filter
+            resultFile=inputGraph;
+            std::string ext;
+            ext = "-root-" + to_string(window) + '.' + "bloom";
+            resultFile.replace(resultFile.end() - 4, resultFile.end(),ext);
             findRootNodesApprox(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and time " << pend << std::endl;
+        } else if (rootAlgo == 6) {
+            //find candidates from the output of bloom filter algo
+            string root_file=inputGraph;
+            std::string ext;
+            ext = "-root-" + to_string(window) + '.' + "bloom";
+            root_file.replace(root_file.end() - 4, root_file.end(),ext);
+            findCandidateFromApprox(inputGraph, root_file, resultFile, window, cleanUpLimit, reverseEdge);
+
+            pend = timer.LiveElapsedSeconds();
+            std::cout << "Found all root nodes and candidates " << pend << std::endl;
         } else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
         }

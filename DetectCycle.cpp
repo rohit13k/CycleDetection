@@ -243,7 +243,7 @@ int findRootNodes(std::string input, std::string output, int window, int cleanUp
 
 
                     }
-                }
+                }//for loop
             }
 
 
