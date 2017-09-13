@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
         // findWithLength(inputGraph,resultFile,window,timeInMsec,cleanUpLimit,cyclelenght);
         if (rootAlgo == 0) {
             //  findRootNodes(inputGraph, resultFile, window, timeInMsec, cleanUpLimit);
+            std::cout << "Running naive: input: "<<inputGraph<<" result: "<<resultFile << std::endl;
             findAllCycleNaive(inputGraph, resultFile, window, reverseEdge);
         } else if (rootAlgo == 1) {
             std::string cycleFile = resultFile;
@@ -108,6 +109,8 @@ int main(int argc, char **argv) {
             std::string ext;
             ext = "-root-" + to_string(window) + '.' + "bloom";
             resultFile.replace(resultFile.end() - 4, resultFile.end(),ext);
+            std::cout << "Finding root nodes using bloom: input: "<<inputGraph<<" result: "<<resultFile << std::endl;
+
             findRootNodesApprox(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
@@ -118,6 +121,7 @@ int main(int argc, char **argv) {
             std::string ext;
             ext = "-root-" + to_string(window) + '.' + "bloom";
             root_file.replace(root_file.end() - 4, root_file.end(),ext);
+            std::cout << "Finding candidates from bloom output: input: "<<inputGraph<<" root_file: "<<root_file<<" result: "<<resultFile << std::endl;
             findCandidateFromApprox(inputGraph, root_file, resultFile, window, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
