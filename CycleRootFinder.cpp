@@ -445,14 +445,14 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
                 completeSummary[dst][-1 * timestamp].insert(src);
 
             } else {
-                watchlist.erase(dst);
-               // completeSummary.erase(dst);
+                watchlist.erase(src);
+                completeSummary.erase(src);
             }
         }
 
 
         //if src summary exist transfer it to dst  if it is in window prune away whats not in window
-        if (watchlist.count(src) > 0) {
+        if (completeSummary.count(src)  > 0) {
             vector<string> cycles=updateSummaries(&completeSummary,  timestamp,
                                                   window_bracket,  src,  dst);
             for(string c:cycles){
