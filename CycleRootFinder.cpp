@@ -315,18 +315,26 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
             src_iterator = completeSummary.find(src);
             dst_iterator = completeSummary.find(dst);
             bloom_filter &src_summary = src_iterator->second;
+
             //if src summary exist transfer it to dst  if it is in window prune away whats not in window
             if (dst_iterator != completeSummary.end()) {
-                if (dst_iterator->second.contains(src)) {
+                if(node_update_time[dst]-timestamp>window_bracket){
+                    dst_iterator->second.clear();
+                }else {
+                    if (dst_iterator->second.contains(src)) {
 
-                    result << src << ",";
-                    result << timestamp << ",";//start of cycle
-                    result << dst; //end of cycle
+                        if (dst_iterator->second.element_count() > 1) {
+                            result << src << ",";
+                            result << timestamp << ",";//start of cycle
+                            result << dst; //end of cycle
 
-                    result << "\n";
+                            result << "\n";
+                        }
 
+                    }
+                    src_summary |= dst_iterator->second;
+                    src_summary.update_element_count(dst_iterator->second.element_count());
                 }
-                src_summary |= dst_iterator->second;
             }
         }
 
@@ -438,7 +446,7 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
 
             } else {
                 watchlist.erase(dst);
-                completeSummary.erase(dst);
+               // completeSummary.erase(dst);
             }
         }
 
