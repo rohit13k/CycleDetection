@@ -409,7 +409,7 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
     timer.Start();
     while (input_file >> line) {
 
-        if ((all_root_old_position != all_root_position) & all_root_position >= 0) {
+        if ((all_root_old_position != all_root_position) & all_root_position >= 0 ) {
             templine = Tools::Split(all_root[all_root_position], ',');
             root_node = stoi(templine[0]);
             start_time = stoi(templine[1]);
@@ -425,54 +425,54 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
             dst = stoi(templine[0]);
         }
         timestamp = stoi(templine[2]);
-        //if last root is processed more then window time ago exit
-        if (all_root_position < 0) {
-            if (timestamp - start_time > window_bracket) {
-                break;
-            }
-        }
-        //if the edge from root node is found in data file
-        if ((src == root_node & dst == root_neighbour & timestamp == start_time)) {
-            //add destination node in watchlist or update its time
-            watchlist[dst] = timestamp;
-            //add src in the complete summary of dst
-            completeSummary[dst][-1 * timestamp].insert(src);
+        if (src!=dst) {//avoid self loop
 
-            all_root_position--;
-        } else if (watchlist.count(src) > 0) { //else if src is in watchlist add dst also in watch list
-            if (timestamp - watchlist[src] < window_bracket) {
+            //if last root is processed more then window time ago exit
+            if (all_root_position < 0) {
+                if (timestamp - start_time > window_bracket) {
+                    break;
+                }
+            }
+            //if the edge from root node is found in data file
+            if ((src == root_node & dst == root_neighbour & timestamp == start_time)) {
+                //add destination node in watchlist or update its time
                 watchlist[dst] = timestamp;
+                //add src in the complete summary of dst
                 completeSummary[dst][-1 * timestamp].insert(src);
 
-            } else {
-                watchlist.erase(src);
-                completeSummary.erase(src);
+                all_root_position--;
+            } else if (watchlist.count(src) > 0) { //else if src is in watchlist add dst also in watch list
+                if (timestamp - watchlist[src] < window_bracket) {
+                    watchlist[dst] = timestamp;
+                    completeSummary[dst][-1 * timestamp].insert(src);
+
+                } else {
+                    watchlist.erase(src);
+                    completeSummary.erase(src);
+                }
+            }
+            //if src summary exist transfer it to dst  if it is in window prune away whats not in window
+            if (completeSummary.count(src) > 0) {
+                vector<string> cycles = updateSummaries(&completeSummary, timestamp,
+                                                        window_bracket, src, dst);
+                for (string c:cycles) {
+                    result << c << "\n";
+                }
+            }
+
+            count++;
+            if (count % cleanUpLimit == 0) {
+                //do cleanup
+
+                double parseTime = timer.LiveElapsedSeconds() - ptime;
+                ptime = timer.LiveElapsedSeconds();
+                int cleanupsize = cleanup(&completeSummary, timestamp, window_bracket);
+                std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
+                cout << ",summary size," << completeSummary.size();
+                cout << ",memory," << getMem();
+                cout << " ,delete count," << cleanupsize;
+                std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
             }
         }
-
-
-        //if src summary exist transfer it to dst  if it is in window prune away whats not in window
-        if (completeSummary.count(src)  > 0) {
-            vector<string> cycles=updateSummaries(&completeSummary,  timestamp,
-                                                  window_bracket,  src,  dst);
-            for(string c:cycles){
-                result<<c<<"\n";
-            }
-        }
-
-        count++;
-        if (count % cleanUpLimit == 0) {
-            //do cleanup
-
-            double parseTime = timer.LiveElapsedSeconds() - ptime;
-            ptime = timer.LiveElapsedSeconds();
-            int cleanupsize = cleanup(&completeSummary, timestamp, window_bracket);
-            std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
-            cout << ",summary size," << completeSummary.size();
-            cout << ",memory," << getMem();
-            cout << " ,delete count," << cleanupsize;
-            std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
-        }
-
     }//end of while loop
 }
