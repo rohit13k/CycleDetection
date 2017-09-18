@@ -386,7 +386,7 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
     ifstream root_file(root.c_str());
     map<int, int> watchlist;
     vector<string> all_root;
-    map<int, map<int, set<int>>> completeSummary;
+  //  map<int, map<int, set<int>>> completeSummary;
     string line;
     while (root_file >> line) {
         all_root.push_back(line);
@@ -438,19 +438,20 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
                 //add destination node in watchlist or update its time
                 watchlist[dst] = timestamp;
                 //add src in the complete summary of dst
-                completeSummary[dst][-1 * timestamp].insert(src);
+    //            completeSummary[dst][-1 * timestamp].insert(src);
 
                 all_root_position--;
             } else if (watchlist.count(src) > 0) { //else if src is in watchlist add dst also in watch list
                 if (timestamp - watchlist[src] < window_bracket) {
                     watchlist[dst] = timestamp;
-                    completeSummary[dst][-1 * timestamp].insert(src);
+          //          completeSummary[dst][-1 * timestamp].insert(src);
 
                 } else {
                     watchlist.erase(src);
-                    completeSummary.erase(src);
+         //           completeSummary.erase(src);
                 }
             }
+            /*
             //if src summary exist transfer it to dst  if it is in window prune away whats not in window
             if (completeSummary.count(src) > 0) {
                 vector<string> cycles = updateSummaries(&completeSummary, timestamp,
@@ -459,20 +460,21 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
                     result << c << "\n";
                 }
             }
-
+*/
             count++;
             if (count % cleanUpLimit == 0) {
                 //do cleanup
 
                 double parseTime = timer.LiveElapsedSeconds() - ptime;
                 ptime = timer.LiveElapsedSeconds();
-                int cleanupsize = cleanup(&completeSummary, timestamp, window_bracket);
+             //   int cleanupsize = cleanup(&completeSummary, timestamp, window_bracket);
                 std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
-                cout << ",summary size," << completeSummary.size();
+             //   cout << ",summary size," << completeSummary.size();
                 cout << ",memory," << getMem();
-                cout << " ,delete count," << cleanupsize;
+            //    cout << " ,delete count," << cleanupsize;
                 std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
             }
+
         }
     }//end of while loop
 }
