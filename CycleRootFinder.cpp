@@ -52,7 +52,7 @@ int findRootNodesNew(std::string input, std::string output, int window, int clea
         }
         timestamp = stoi(templine[2]);
 
-        if (src==dst) {
+        if (src == dst) {
             //self loop ignored
         } else {
 
@@ -61,10 +61,10 @@ int findRootNodesNew(std::string input, std::string output, int window, int clea
 
             //if src summary exist transfer it to dst  if it is in window prune away whats not in window
             if (completeSummary.count(src) > 0) {
-                vector<string> cycles=updateSummaries(&completeSummary,  timestamp,
-                         window_bracket,  src,  dst);
-                for(string c:cycles){
-                    result<<c<<"\n";
+                vector<string> cycles = updateSummaries(&completeSummary, timestamp,
+                                                        window_bracket, src, dst);
+                for (string c:cycles) {
+                    result << c << "\n";
                 }
             }
 
@@ -90,6 +90,7 @@ int findRootNodesNew(std::string input, std::string output, int window, int clea
     result.close();
     return 0;
 }
+
 vector<string>
 updateSummaries(map<int, map<int, set<int>>> *completeSummary, int timestamp,
                 int window_bracket, int src, int dst) {
@@ -122,7 +123,7 @@ updateSummaries(map<int, map<int, set<int>>> *completeSummary, int timestamp,
                 }
                 // add other in the summary
                 for (auto x:it->second) {
-                    if (x!=dst) {
+                    if (x != dst) {
                         dst_summary[it->first].insert(x);
                     }
                 }
@@ -170,6 +171,7 @@ int cleanup(map<int, map<int, set<int>>> *completeSummary, int timestamp, int wi
     }
     return deletelist.size();
 }
+
 int cleanupNew(map<int, map<int, int>> *completeSummary, int timestamp, int window_bracket, bool forward) {
     int size = 0;
     string src = "";
@@ -248,6 +250,7 @@ set<int> getCandidates(map<int, set<int>> summary, int t_s, int t_e) {
     return candidates;
 }
 
+
 int findRootNodesApprox(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge) {
     map<int, bloom_filter> completeSummary;
     map<int, bloom_filter>::iterator src_iterator;
@@ -318,9 +321,9 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
 
             //if src summary exist transfer it to dst  if it is in window prune away whats not in window
             if (dst_iterator != completeSummary.end()) {
-                if(node_update_time[dst]-timestamp>window_bracket){
+                if (node_update_time[dst] - timestamp > window_bracket) {
                     dst_iterator->second.clear();
-                }else {
+                } else {
                     if (dst_iterator->second.contains(src)) {
 
                         if (dst_iterator->second.element_count() > 1) {
@@ -361,6 +364,192 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
     return 0;
 }
 
+
+int findRootNodesApproxBothDirection(std::string input, std::string output, int window, int cleanUpLimit,
+                                     bool reverseEdge) {
+    map<int, bloom_filter> completeSummary;
+
+    map<int, int> node_update_time;
+    map<int, set<pair<int, int>>> rootnode_end_time_set;
+    map<int, set<pair<int, int>>>::iterator rootnode_end_time_set_itr;
+    bloom_parameters parameters;
+    pair<int, pair<int, int>> root_candidate;
+    // How many elements roughly do we expect to insert?
+    parameters.projected_element_count = 1000;
+
+    // Maximum tolerable false positive probability? (0,1)
+    parameters.false_positive_probability = 0.0001; // 1 in 10000
+
+    // Simple randomizer (optional)
+    parameters.random_seed = 0xA5A5A5A5;
+    parameters.compute_optimal_parameters();
+
+    std::vector<std::string> templine;
+    ifstream infile(input.c_str());
+    int src, dst;
+
+    string line;
+    Platform::Timer timer;
+    timer.Start();
+    int timestamp;
+
+    int count = 0;
+
+    int window_bracket = window * 60 * 60;
+    double ptime = 0.0;
+
+    ofstream result;
+    result.open(output.c_str());
+
+    vector<string> all_data;
+    while (infile >> line) {
+
+        templine = Tools::Split(line, ',');
+        src = stoi(templine[0]);
+        dst = stoi(templine[1]);
+        if (reverseEdge) {
+            src = stoi(templine[1]);
+            dst = stoi(templine[0]);
+        }
+        timestamp = stoi(templine[2]);
+
+        all_data.push_back(line);
+        root_candidate = updateSummary(dst, src, timestamp, window_bracket, &completeSummary, parameters,
+                                       &node_update_time);
+        if (root_candidate.first != 0) {
+            rootnode_end_time_set[root_candidate.first].insert(root_candidate.second);
+        }
+        count++;
+        if (count % cleanUpLimit == 0) {
+            //do cleanup
+
+            double parseTime = timer.LiveElapsedSeconds() - ptime;
+            ptime = timer.LiveElapsedSeconds();
+            int cleanupsize = cleanup(&completeSummary, &node_update_time, timestamp, window_bracket);
+            std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
+            cout << ",summary size," << completeSummary.size();
+            cout << ",memory," << getMem();
+            cout << " ,delete count," << cleanupsize;
+            std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
+        }
+    }
+
+    int end_time;
+
+    int end_neighbour;
+    completeSummary.clear();
+    node_update_time.clear();
+    count = 0;
+    cout << rootnode_end_time_set.size() << endl;
+    for (int j = all_data.size() - 1; j >= 0; j--) {
+        line = all_data[j];
+        templine = Tools::Split(line, ',');
+        src = stoi(templine[0]);
+        dst = stoi(templine[1]);
+        if (reverseEdge) {
+            src = stoi(templine[1]);
+            dst = stoi(templine[0]);
+        }
+        timestamp = stoi(templine[2]);
+
+        root_candidate = updateSummary(src, dst, timestamp, window_bracket, &completeSummary, parameters,
+                                       &node_update_time);
+        if (root_candidate.first != 0) {
+//check if there is a valid end for this start node.
+            rootnode_end_time_set_itr = rootnode_end_time_set.find(root_candidate.first);
+            if (rootnode_end_time_set_itr != rootnode_end_time_set.end()) {
+
+                set<pair<int, int>> &possible_end_time_set = rootnode_end_time_set_itr->second;
+
+                for (set<pair<int, int>>::iterator it = possible_end_time_set.begin();
+                     it != possible_end_time_set.end(); ++it) {
+                    end_time = it->second;
+                    end_neighbour = it->first;
+                    if (end_time - timestamp > 0 & end_time - timestamp < window_bracket) {
+                        if (dst != end_neighbour) {
+                            result << src << ",";
+                            result << timestamp << ",";//start of cycle
+                            result << dst; //end of cycle
+
+                            result << "\n";
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        count++;
+        if (count % cleanUpLimit == 0) {
+            //do cleanup
+
+            double parseTime = timer.LiveElapsedSeconds() - ptime;
+            ptime = timer.LiveElapsedSeconds();
+            int cleanupsize = cleanup(&completeSummary, &node_update_time, timestamp, window_bracket);
+            std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
+            cout << ",summary size," << completeSummary.size();
+            cout << ",memory," << getMem();
+            cout << " ,delete count," << cleanupsize;
+            std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
+        }
+    }
+
+
+    std::cout << "finished parsing all " << timer.LiveElapsedSeconds() << std::endl;
+    timer.Stop();
+    result.close();
+    return 0;
+}
+
+pair<int, pair<int, int>>
+updateSummary(int src, int dst, int timestamp, int window_bracket, map<int, bloom_filter> *summary,
+              bloom_parameters parameters, map<int, int> *update_time) {
+    map<int, bloom_filter>::iterator src_iterator;
+    map<int, bloom_filter>::iterator dst_iterator;
+    map<int, bloom_filter> &completeSummary = *summary;
+    map<int, int> &node_update_time = *update_time;
+    pair<int, pair<int, int>> result;
+
+    if (src == dst) {
+        //self loop ignored
+    } else {
+
+        if (completeSummary.count(src) == 0) {
+            //Instantiate Bloom Filter
+            bloom_filter filter(parameters);
+            filter.insert(dst);
+            completeSummary[src] = filter;
+
+        } else {
+            completeSummary[src].insert(dst);
+
+        }
+        node_update_time[src] = timestamp;
+        src_iterator = completeSummary.find(src);
+        dst_iterator = completeSummary.find(dst);
+        bloom_filter &src_summary = src_iterator->second;
+
+        //if src summary exist transfer it to dst  if it is in window prune away whats not in window
+        if (dst_iterator != completeSummary.end() & node_update_time.count(dst) > 0) {
+            if (abs(node_update_time[dst] - timestamp) > window_bracket) {
+                dst_iterator->second.clear();
+            } else {
+                if (dst_iterator->second.contains(src)) {
+
+                    if (dst_iterator->second.element_count() > 1) {
+                        result = make_pair(src, make_pair(dst, timestamp));
+
+                    }
+
+                }
+                src_summary |= dst_iterator->second;
+                src_summary.update_element_count(dst_iterator->second.element_count());
+            }
+        }
+    }
+
+    return result;
+}
+
 int
 cleanup(map<int, bloom_filter> *completeSummary, map<int, int> *node_update_time, int timestamp, int window_bracket) {
     int size = 0;
@@ -370,7 +559,7 @@ cleanup(map<int, bloom_filter> *completeSummary, map<int, int> *node_update_time
     for (map<int, int>::iterator it = node_update_time->begin();
          it != node_update_time->end(); ++it) {
 
-        if (it->second - timestamp > window_bracket) {
+        if (abs(it->second - timestamp) > window_bracket) {
             deletelist.push_back(it->first);
         }
     }
@@ -386,7 +575,7 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
     ifstream root_file(root.c_str());
     map<int, int> watchlist;
     vector<string> all_root;
-  //  map<int, map<int, set<int>>> completeSummary;
+    map<int, map<int, set<int>>> completeSummary;
     string line;
     while (root_file >> line) {
         all_root.push_back(line);
@@ -409,7 +598,7 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
     timer.Start();
     while (input_file >> line) {
 
-        if ((all_root_old_position != all_root_position) & all_root_position >= 0 ) {
+        if ((all_root_old_position != all_root_position) & all_root_position >= 0) {
             templine = Tools::Split(all_root[all_root_position], ',');
             root_node = stoi(templine[0]);
             start_time = stoi(templine[1]);
@@ -425,7 +614,7 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
             dst = stoi(templine[0]);
         }
         timestamp = stoi(templine[2]);
-        if (src!=dst) {//avoid self loop
+        if (src != dst) {//avoid self loop
 
             //if last root is processed more then window time ago exit
             if (all_root_position < 0) {
@@ -438,20 +627,20 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
                 //add destination node in watchlist or update its time
                 watchlist[dst] = timestamp;
                 //add src in the complete summary of dst
-    //            completeSummary[dst][-1 * timestamp].insert(src);
+                completeSummary[dst][-1 * timestamp].insert(src);
 
                 all_root_position--;
             } else if (watchlist.count(src) > 0) { //else if src is in watchlist add dst also in watch list
                 if (timestamp - watchlist[src] < window_bracket) {
                     watchlist[dst] = timestamp;
-          //          completeSummary[dst][-1 * timestamp].insert(src);
+                    completeSummary[dst][-1 * timestamp].insert(src);
 
                 } else {
                     watchlist.erase(src);
-         //           completeSummary.erase(src);
+                    completeSummary.erase(src);
                 }
             }
-            /*
+
             //if src summary exist transfer it to dst  if it is in window prune away whats not in window
             if (completeSummary.count(src) > 0) {
                 vector<string> cycles = updateSummaries(&completeSummary, timestamp,
@@ -460,18 +649,18 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
                     result << c << "\n";
                 }
             }
-*/
+
             count++;
             if (count % cleanUpLimit == 0) {
                 //do cleanup
 
                 double parseTime = timer.LiveElapsedSeconds() - ptime;
                 ptime = timer.LiveElapsedSeconds();
-             //   int cleanupsize = cleanup(&completeSummary, timestamp, window_bracket);
+                int cleanupsize = cleanup(&completeSummary, timestamp, window_bracket);
                 std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
-             //   cout << ",summary size," << completeSummary.size();
+                cout << ",summary size," << completeSummary.size();
                 cout << ",memory," << getMem();
-            //    cout << " ,delete count," << cleanupsize;
+                cout << " ,delete count," << cleanupsize;
                 std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
             }
 

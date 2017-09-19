@@ -126,6 +126,18 @@ int main(int argc, char **argv) {
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and candidates " << pend << std::endl;
+        }  else if (rootAlgo == 7) {
+            //find root node using bloom filter
+            resultFile=inputGraph;
+            std::string ext;
+            ext = "-root-" + to_string(window) + '.' + "bloom";
+            resultFile.replace(resultFile.end() - 4, resultFile.end(),ext);
+            std::cout << "Finding root nodes using bidirectional bloom: input: "<<inputGraph<<" result: "<<resultFile << std::endl;
+
+            findRootNodesApproxBothDirection(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
+
+            pend = timer.LiveElapsedSeconds();
+            std::cout << "Found all root nodes and time " << pend << std::endl;
         } else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
         }

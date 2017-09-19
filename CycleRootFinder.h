@@ -54,8 +54,9 @@ int
 cleanup(map<int, bloom_filter> *completeSummary, map<int, int> *node_update_time, int timestamp, int window_bracket);
 
 int findRootNodesApprox(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge);
-
+int findRootNodesApproxBothDirection
+        (std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge);
 int findCandidateFromApprox(std::string input, string root_file, std::string output, int window, int cleanUpLimit,
                             bool reverseEdge);
-
+pair<int,pair<int,int>> updateSummary(int src,int dst,int timestamp,int window_bracket,map<int, bloom_filter> *summary,bloom_parameters parameters, map<int, int> *update_time);
 #endif //CYCLEDETECTION_CYCLEROOTFINDER_H
