@@ -1,16 +1,11 @@
 #include <iostream>
 #include <tclap/CmdLine.h>
-#include "countCycleFrequency.h"
-#include "countWithPath.h"
 #include "DetectCycle.h"
-#include <map>
-#include <iostream>
-#include "FileIndexer.h"
-#include <utility>
-#include <string>
 #include "Timer.h"
 #include "MemoryMonitor.h"
 #include "CycleRootFinder.h"
+
+using namespace std;
 
 int main(int argc, char **argv) {
     // Wrap everything in a try block.  Do this every time,
@@ -71,7 +66,7 @@ int main(int argc, char **argv) {
         // findWithLength(inputGraph,resultFile,window,timeInMsec,cleanUpLimit,cyclelenght);
         if (rootAlgo == 0) {
             //  findRootNodes(inputGraph, resultFile, window, timeInMsec, cleanUpLimit);
-            std::cout << "Running naive: input: "<<inputGraph<<" result: "<<resultFile << std::endl;
+            std::cout << "Running naive: input: " << inputGraph << " result: " << resultFile << std::endl;
             findAllCycleNaive(inputGraph, resultFile, window, reverseEdge);
         } else if (rootAlgo == 1) {
             std::string cycleFile = resultFile;
@@ -105,11 +100,12 @@ int main(int argc, char **argv) {
             std::cout << "Found all root nodes and time " << pend << std::endl;
         } else if (rootAlgo == 5) {
             //find root node using bloom filter
-            resultFile=inputGraph;
+            resultFile = inputGraph;
             std::string ext;
             ext = "-root-" + to_string(window) + '.' + "bloom";
-            resultFile.replace(resultFile.end() - 4, resultFile.end(),ext);
-            std::cout << "Finding root nodes using bloom: input: "<<inputGraph<<" result: "<<resultFile << std::endl;
+            resultFile.replace(resultFile.end() - 4, resultFile.end(), ext);
+            std::cout << "Finding root nodes using bloom: input: " << inputGraph << " result: " << resultFile
+                      << std::endl;
 
             findRootNodesApprox(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
 
@@ -117,32 +113,64 @@ int main(int argc, char **argv) {
             std::cout << "Found all root nodes and time " << pend << std::endl;
         } else if (rootAlgo == 6) {
             //find candidates from the output of bloom filter algo
-            string root_file=inputGraph;
+            string root_file = inputGraph;
             std::string ext;
             ext = "-root-" + to_string(window) + '.' + "bloom";
-            root_file.replace(root_file.end() - 4, root_file.end(),ext);
-            std::cout << "Finding candidates from bloom output: input: "<<inputGraph<<" root_file: "<<root_file<<" result: "<<resultFile << std::endl;
+            root_file.replace(root_file.end() - 4, root_file.end(), ext);
+            std::cout << "Finding candidates from bloom output: input: " << inputGraph << " root_file: " << root_file
+                      << " result: " << resultFile << std::endl;
             findCandidateFromApprox(inputGraph, root_file, resultFile, window, cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and candidates " << pend << std::endl;
-        }  else if (rootAlgo == 7) {
+        } else if (rootAlgo == 7) {
             //find root node using bloom filter
-            resultFile=inputGraph;
+          string root_file = inputGraph;
             std::string ext;
             ext = "-root-" + to_string(window) + '.' + "bloom";
-            resultFile.replace(resultFile.end() - 4, resultFile.end(),ext);
-            std::cout << "Finding root nodes using bidirectional bloom: input: "<<inputGraph<<" result: "<<resultFile << std::endl;
+            root_file.replace(root_file.end() - 4, root_file.end(), ext);
+            std::cout << "Finding root nodes using bidirectional bloom: input: " << inputGraph << " result: "
+                      << root_file << std::endl;
 
-            findRootNodesApproxBothDirection(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
+            set<approxCandidates> root_candidates = findRootNodesApproxBothDirection(inputGraph, root_file, window,
+                                                                                     cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
-            std::cout << "Found all root nodes and time " << pend << std::endl;
+            std::cout << "Time to find all root candidates: " << pend << std::endl;
+            std::cout << "Finding cycles using  bloom: input: " << inputGraph << " result: " << resultFile << std::endl;
+
+            findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile,
+                                   window, reverseEdge);
+
+            std::cout << "Time to find cycle using bloom: " << timer.LiveElapsedSeconds()-pend << std::endl;
+
+        } else if (rootAlgo == 8) {
+            //find root node using set
+            string root_file = inputGraph;
+            std::string ext;
+            ext = "-root-" + to_string(window) + '.' + "exact";
+            root_file.replace(root_file.end() - 4, root_file.end(), ext);
+            std::cout << "Finding root nodes using bidirectional set: input: " << inputGraph << " result: "
+                      << root_file << std::endl;
+
+            set<exactCandidates> root_candidates = findRootNodesExactBothDirection(inputGraph, root_file, window,
+                                                                                     cleanUpLimit, reverseEdge);
+
+            pend = timer.LiveElapsedSeconds();
+            std::cout << "Time to find all root candidates: " << pend << std::endl;
+            std::cout << "Finding cycles using  set: input: " << inputGraph << " result: " << resultFile << std::endl;
+
+            findAllCycleUsingSet(inputGraph, &root_candidates, resultFile,
+                                   window, reverseEdge);
+
+            std::cout << "Time to find cycle using set: " << timer.LiveElapsedSeconds()-pend << std::endl;
+
         } else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
         }
 
         std::cout << "Memory end, " << getMem() << std::endl;
+        std::cout << "Total Time, " << timer.LiveElapsedSeconds() << std::endl;
     } catch (TCLAP::ArgException &e)  // catch any exceptions
     { std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; }
     catch (std::exception &e) {

@@ -3,14 +3,6 @@
 //
 
 #include "double_llist.h"
-#include "DetectCycle.h"
-/*
- * C++ Program to Implement Doubly Linked List
- */
-#include<iostream>
-#include<cstdio>
-#include<cstdlib>
-#include <vector>
 
 node *start;
 node *endNode;
@@ -18,7 +10,7 @@ node *endNode;
 /*
  * Create Double Link List
  */
-void double_llist::create_list(long updatetime, string nodeid) {
+void double_llist::create_list(int updatetime, int nodeid) {
     struct node *s, *temp;
     temp = new(struct node);
     temp->updatetime = updatetime;
@@ -54,7 +46,7 @@ void double_llist::delete_element(node *thisNode) {
 /*
  * Insertion at the beginning
  */
-node * double_llist::add_begin(long updatetime, string nodeid) {
+node * double_llist::add_begin(int updatetime, int nodeid) {
     if (start == NULL) {
         create_list(updatetime,  nodeid);
         return start;
@@ -125,7 +117,7 @@ void double_llist::reverse() {
 /*
  * Delete all node from bottom till the time given
  */
-int double_llist::delete_expired(long current_time) {
+int double_llist::delete_expired(int current_time) {
     struct node *q, *temp;
     int deleted_count=0;
     if (start == NULL) {
@@ -153,9 +145,9 @@ int double_llist::delete_expired(long current_time) {
 }
 
 
-vector<string> double_llist::get_expired_nodes(long current_time) {
+vector<int> double_llist::get_expired_nodes(int current_time) {
     struct node *q;
-    vector<string>  expired_node;
+    vector<int>  expired_node;
     if (start == NULL) {
         cout << "List empty,nothing to delete" << endl;
         return expired_node;

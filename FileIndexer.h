@@ -9,14 +9,15 @@
 #include <string>
 #include <map>
 #include <iostream>
+#include "bloom_filter.hpp"
 
 struct pedge {
-    std::string fromVertex;
-    std::string toVertex;
-    long time;
+    int fromVertex;
+   int toVertex;
+    int time;
 
     bool operator==(const pedge &rhs) const {
-        if ((fromVertex.compare(rhs.fromVertex) == 0) && (toVertex.compare(rhs.toVertex) == 0) && time == rhs.time) {
+        if ((fromVertex==rhs.fromVertex) && (toVertex==rhs.toVertex) && time == rhs.time) {
             return true;
         } else {
             false;
@@ -26,7 +27,7 @@ struct pedge {
     bool operator<(const pedge &rhs) const {
 
         if (time == rhs.time) {
-            if (fromVertex.compare(rhs.fromVertex) == 0) {
+            if (fromVertex==rhs.fromVertex) {
                 return toVertex < rhs.toVertex;
             } else {
                 return fromVertex < rhs.fromVertex;
@@ -40,12 +41,12 @@ struct pedge {
 
 int readFile(std::string inputFile,bool reverseEdge);
 
-std::set<pedge> getFilteredData(std::string src, long t_s, long t_end, std::set<std::string> *candidates);
-std::set<pedge> getFilteredData(std::string src, long t_s, long t_end);
-std::set<pedge> getFilteredData(std::string src, long t_s);
+std::set<pedge> getFilteredData(int src, int t_s, int t_end, std::set<int> *candidates);
+std::set<pedge> getFilteredData(int src, int t_s, int t_end);
+std::set<pedge> getFilteredData(int src, int t_s);
 
-long getMaxTime(std::string src, std::string dst, long t_uper);
-
-long getMinTime(std::string src, std::string dst, long t_lower, long t_uper);
+long getMaxTime(int src,int dst, int t_uper);
+std::set<pedge> getFilteredData(int src, int t_s, int t_end, bloom_filter *candidates);
+long getMinTime(int src, int dst, int t_lower, int t_uper);
 
 #endif //CYCLEDETECTION_FILEINDEXER_H

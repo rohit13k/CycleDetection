@@ -15,8 +15,8 @@
 using namespace std;
 struct node
 {
-    long updatetime;
-    string nodeid;
+    int updatetime;
+    int nodeid;
     struct node *next;
     struct node *prev;
 };
@@ -28,14 +28,14 @@ struct node
 class double_llist
 {
 public:
-    void create_list(long update_time,string nodeid);
-    node * add_begin(long update_time,string nodeid);
+    void create_list(int update_time,int nodeid);
+    node * add_begin(int update_time,int nodeid);
     void display_dlist();
     void count();
     void reverse();
     void delete_element(node *this_node);
-    vector<string> get_expired_nodes(long current_time);
-    int delete_expired(long current_time);
+    vector<int> get_expired_nodes(int current_time);
+    int delete_expired(int current_time);
 
 };
 
