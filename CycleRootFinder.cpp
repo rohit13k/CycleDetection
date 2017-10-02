@@ -393,12 +393,15 @@ findRootNodesApproxBothDirection(std::string input, std::string output, int wind
     }
 
     int end_time;
-
+    cout << "Memory after first pass: " << getMem() << std::endl;
     int end_neighbour;
     completeSummary.clear();
     node_update_time.clear();
+    cout << "Memory after first pass after clear: " << getMem() << std::endl;
     count = 0;
     cout << rootnode_end_time_set.size() << endl;
+    set<pair<int, int>>::iterator possible_end_time_set_it;
+
     for (int j = all_data.size() - 1; j >= 0; j--) {
         line = all_data[j];
         templine = Tools::Split(line, ',');
@@ -417,12 +420,12 @@ findRootNodesApproxBothDirection(std::string input, std::string output, int wind
             rootnode_end_time_set_itr = rootnode_end_time_set.find(root_neigbhour_time.first);
             if (rootnode_end_time_set_itr != rootnode_end_time_set.end()) {
 
-                set<pair<int, int>> &possible_end_time_set = rootnode_end_time_set_itr->second;
+                set<pair<int, int>> &possible_end_time_set  = rootnode_end_time_set_itr->second;
 
-                for (set<pair<int, int>>::iterator it = possible_end_time_set.begin();
-                     it != possible_end_time_set.end(); ++it) {
-                    end_time = it->second;
-                    end_neighbour = it->first;
+                for ( possible_end_time_set_it= possible_end_time_set.begin();
+                      possible_end_time_set_it != possible_end_time_set.end(); ++possible_end_time_set_it) {
+                    end_time = possible_end_time_set_it->second;
+                    end_neighbour = possible_end_time_set_it->first;
                     if (end_time - timestamp > 0 & end_time - timestamp < window_bracket) {
                         if (dst != end_neighbour) {
                             result << src << ",";
@@ -458,13 +461,20 @@ findRootNodesApproxBothDirection(std::string input, std::string output, int wind
 
     std::cout << "finished parsing all " << timer.LiveElapsedSeconds() << std::endl;
     std::cout << "#root founds: " << root_candidate_approx.size() << std::endl;
+    std::cout << "Memory after 2nd phase: " << getMem() << std::endl;
+    completeSummary.clear();
+    node_update_time.clear();
+    std::cout << "Memory after 2nd phase clear: " << getMem() << std::endl;
     std::cout << "*********Start compressing***********" << std::endl;
     ptime = timer.LiveElapsedSeconds();
     set<approxCandidates> final_roots = compressRootCandidates(&root_candidate_approx, window_bracket);
     std::cout << "Time to Compress : " << timer.LiveElapsedSeconds() - ptime << " #roots found: "
               << final_roots.size() << std::endl;
     timer.Stop();
+    std::cout << "Memory after compress: " << getMem() << std::endl;
+    root_candidate_approx.clear();
 
+    std::cout << "Memory after compress clear: " << getMem() << std::endl;
     return final_roots;
 }
 
@@ -474,10 +484,10 @@ void print(map<int, map<cycle_time, map<int, set<int>>>> root_candidate_exact) {
     for (map<int, map<cycle_time, map<int, set<int>>>>::iterator iterator1 = root_candidate_exact.begin();
          iterator1 != root_candidate_exact.end(); iterator1++) {
         root_node = iterator1->first;
-        if(root_node=13140) {
+        if (root_node = 13140) {
             for (map<cycle_time, map<int, set<int>>>::iterator timeItr = iterator1->second.begin();
                  timeItr != iterator1->second.end(); timeItr++) {
-                if(timeItr->first.start_time==1196833689) {
+                if (timeItr->first.start_time == 1196833689) {
                     cout << root_node << "," << timeItr->first.start_time << "," << timeItr->first.end_time << ",";
                     for (map<int, set<int>>::iterator dstIt = timeItr->second.begin();
                          dstIt != timeItr->second.end(); dstIt++) {
@@ -493,9 +503,9 @@ void print(map<int, map<cycle_time, map<int, set<int>>>> root_candidate_exact) {
     }
 }
 
-void print(set<exactCandidates> final_roots){
-    for(auto x:final_roots){
-        if(x.root_node==13140) {
+void print(set<exactCandidates> final_roots) {
+    for (auto x:final_roots) {
+        if (x.root_node == 13140) {
             cout << x.root_node << "," << x.end_time << ",";
             for (auto y:x.neighbours_time) {
                 cout << y.first << "-" << y.second << ",";
@@ -636,14 +646,14 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
 
     std::cout << "finished parsing all " << timer.LiveElapsedSeconds() << std::endl;
     std::cout << "#root founds: " << root_candidate_exact.size() << std::endl;
-   // print(root_candidate_exact);
+    // print(root_candidate_exact);
     std::cout << "*********Start compressing***********" << std::endl;
     ptime = timer.LiveElapsedSeconds();
     set<exactCandidates> final_roots = compressRootCandidates(&root_candidate_exact, window_bracket);
     std::cout << "Time to Compress: " << timer.LiveElapsedSeconds() - ptime << " #roots found: "
               << final_roots.size() << std::endl;
     timer.Stop();
- //print(final_roots);
+    //print(final_roots);
 
     return final_roots;
 }
@@ -674,7 +684,7 @@ compressRootCandidates(map<int, map<cycle_time, map<int, bloom_filter>>> *root_c
             } else {
                 if (it_inner->first.end_time < max_end_time) {
                     //update candidates
-                    if(it_inner->first.end_time>ac->end_time) {
+                    if (it_inner->first.end_time > ac->end_time) {
                         ac->end_time = it_inner->first.end_time;
                     }
                     mergeSummaries(&(it_inner->second), ac, it_inner->first.start_time);
@@ -747,7 +757,7 @@ compressRootCandidates(map<int, map<cycle_time, map<int, set<int>>>> *root_candi
             } else {
                 if (it_inner->first.end_time < max_end_time) {
                     //update candidates
-                    if(it_inner->first.end_time>ac->end_time) {
+                    if (it_inner->first.end_time > ac->end_time) {
                         ac->end_time = it_inner->first.end_time;
                     }
                     mergeSummaries(&(it_inner->second), ac, it_inner->first.start_time);

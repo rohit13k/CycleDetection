@@ -137,6 +137,7 @@ int main(int argc, char **argv) {
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Time to find all root candidates: " << pend << std::endl;
+            std::cout << "Memory: " << getMem() << std::endl;
             std::cout << "Finding cycles using  bloom: input: " << inputGraph << " result: " << resultFile << std::endl;
 
             findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile,

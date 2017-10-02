@@ -418,15 +418,18 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidates> *root_can
 
     int t_s;
     int t_end;
-    int i = 0;
+    int count = 0;
     int rootnode;
     int root_neigbour;
     bloom_filter candidateset;
     for (root_candidate_approx_itr = root_candidate_approx.begin();
          root_candidate_approx_itr != root_candidate_approx.end(); ++root_candidate_approx_itr) {
         DynamicDFSApprox(*root_candidate_approx_itr, window_bracket);
-
+        if(count%1000==0){
+            cout<<"finished processing, "<<count<<" memory, "<<getMem()<<" cycle found, "<< resultAllPath.size()<<endl;
+        }
     }
+    cout<<"finished processing, "<<count<<" memory, "<<getMem()<<" cycle found, "<< resultAllPath.size()<<endl;
 
     int cycleLengthArray[50] = {0};
     int cycleLenght;
@@ -477,15 +480,19 @@ int findAllCycleUsingSet(std::string dataFile, set<exactCandidates> *root_candid
 
     int t_s;
     int t_end;
-    int i = 0;
+    int count = 0;
     int rootnode;
-    int root_neigbour;
     set<int> candidateset;
     for (root_candidate_approx_itr = root_candidate_approx.begin();
          root_candidate_approx_itr != root_candidate_approx.end(); ++root_candidate_approx_itr) {
         DynamicDFSExact(*root_candidate_approx_itr, window_bracket);
+        count++;
+        if(count%1000==0){
+            cout<<"finished processing, "<<count<<" memory, "<<getMem()<<" cycle found, "<< resultAllPath.size()<<endl;
+        }
 
     }
+    cout<<"finished processing, "<<count<<" memory, "<<getMem()<<" cycle found, "<< resultAllPath.size()<<endl;
 
     int cycleLengthArray[50] = {0};
     int cycleLenght;
