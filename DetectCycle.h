@@ -113,7 +113,7 @@ struct nodeSummary {
 
 };
 int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string output, int window,
-                 bool isCompressed,bool reverseEdge,bool candidates_provided);
+                 bool isCompressed,bool reverseEdge,bool candidates_provided, bool use_bundle);
 void unblock(nodeid v, int t_v, int t_e);
 void findCycle(nodeid rootNode, int t_s, std::set<nodeid> *candidates, int window_bracket);
 
@@ -130,7 +130,7 @@ bool allPath(nodeid w, nodeid rootnode, int t_s, int t_e, std::vector <std::stri
              std::set<nodeid> candidates, std::set<int> *cycleFound);
 bool allPathWithoutCandidate(nodeid w, nodeid rootnode, int t_s, int t_e, std::vector <std::string> path_till_here,
              std::set<nodeid> seen_node, std::set<int> *cycleFound);
-std::set<int> DynamicDFS(nodeid rootnode,int t_s,int t_end, std::set<int> candidates, int window_bracket,bool isCompressed,bool candidates_provided);
+std::set<int> DynamicDFS(nodeid rootnode,int t_s,int t_end, std::set<int> candidates, int window_bracket,bool isCompressed,bool candidates_provided, bool use_bundle);
 
 void findAllCycleNaive(std::string inputGraph,std::string resultFile,int window,bool reverseEdge);
 int cleanup(std::map<nodeid,std::map<int, std::set<nodeid>>> *completeSummary,int timestamp,int window_bracket);

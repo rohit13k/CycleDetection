@@ -397,6 +397,7 @@ findRootNodesApproxBothDirection(std::string input, std::string output, int wind
     int end_neighbour;
     completeSummary.clear();
     node_update_time.clear();
+   
     cout << "Memory after first pass after clear: " << getMem() << std::endl;
     count = 0;
     cout << rootnode_end_time_set.size() << endl;

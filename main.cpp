@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
         cmd.add(isCompressed);
 
         cmd.add(cycle);
-
+        bool use_bundle = false;
 
         // Parse the argv array.
         cmd.parse(argc, argv);
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
             pend = timer.LiveElapsedSeconds();
             std::cout << "Found all root nodes and time " << pend << std::endl;
             findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
-                         candidates_provided);
+                         candidates_provided, use_bundle);
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
         } else if (rootAlgo == 2) {
             findRootNodes(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");
 
             findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
-                         candidates_provided);
+                         candidates_provided, use_bundle);
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
         } else if (rootAlgo == 4) {
             // find root node using new method
@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
             std::cout << "Found all root nodes and candidates " << pend << std::endl;
         } else if (rootAlgo == 7) {
             //find root node using bloom filter
-          string root_file = inputGraph;
+            string root_file = inputGraph;
             std::string ext;
             ext = "-root-" + to_string(window) + '.' + "bloom";
             root_file.replace(root_file.end() - 4, root_file.end(), ext);
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
             findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile,
                                    window, reverseEdge);
 
-            std::cout << "Time to find cycle using bloom: " << timer.LiveElapsedSeconds()-pend << std::endl;
+            std::cout << "Time to find cycle using bloom: " << timer.LiveElapsedSeconds() - pend << std::endl;
 
         } else if (rootAlgo == 8) {
             //find root node using set
@@ -155,17 +155,27 @@ int main(int argc, char **argv) {
                       << root_file << std::endl;
 
             set<exactCandidates> root_candidates = findRootNodesExactBothDirection(inputGraph, root_file, window,
-                                                                                     cleanUpLimit, reverseEdge);
+                                                                                   cleanUpLimit, reverseEdge);
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Time to find all root candidates: " << pend << std::endl;
             std::cout << "Finding cycles using  set: input: " << inputGraph << " result: " << resultFile << std::endl;
 
             findAllCycleUsingSet(inputGraph, &root_candidates, resultFile,
-                                   window, reverseEdge);
+                                 window, reverseEdge);
 
-            std::cout << "Time to find cycle using set: " << timer.LiveElapsedSeconds()-pend << std::endl;
+            std::cout << "Time to find cycle using set: " << timer.LiveElapsedSeconds() - pend << std::endl;
 
+        } else if (rootAlgo == 9) {
+            use_bundle = true;
+            std::string cycleFile = resultFile;
+            cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");
+            std::cout << "Finding cycles using bundle approach : input: " << inputGraph << " result: "
+                      << cycleFile << std::endl;
+            findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
+                         candidates_provided, use_bundle);
+            std::cout << "Found all cycles nodes using bundle and time " << timer.LiveElapsedSeconds() - pend
+                      << std::endl;
         } else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
         }

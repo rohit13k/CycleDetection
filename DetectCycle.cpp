@@ -308,7 +308,7 @@ set<nodeid> getCandidates(map<int, set<nodeid>> summary, int t_s, int t_e) {
 }
 
 int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string output, int window,
-                 bool isCompressed, bool reverseEdge, bool candidates_provided) {
+                 bool isCompressed, bool reverseEdge, bool candidates_provided, bool use_bundle) {
     int window_bracket = window * 60 * 60;
     double ptime = 0.0;
 
@@ -335,7 +335,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     int t_s;
     int t_end;
     int i = 0;
-
+int count=0;
     while (infile >> line) {
         templine = Tools::Split(line, ',');
         set<nodeid> candidateset;
@@ -353,7 +353,8 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
             //  monitorTime = time(&now);
 
             set<int> cyclesfound = DynamicDFS(rootnode, t_s, t_end + 1, candidateset, window_bracket, isCompressed,
-                                              candidates_provided);
+                                              candidates_provided, use_bundle);
+
             /*
             cout << "Monitor Time," << monitor.LiveElapsedSeconds() << ",rootnode, ";
             cout << rootnode << ",start time," << t_s << ",candidate set size,";
@@ -365,12 +366,20 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
             */
             //  monitor.Stop();
         }
+        count++;
+        if (count % 1000 == 0) {
+            //do cleanup
 
+            double parseTime = timer.LiveElapsedSeconds() - ptime;
+            ptime = timer.LiveElapsedSeconds();
+
+            std::cout << "finished cycle roots, count," << count << ",time," << parseTime;
+            cout << ",cycle found," << resultAllPath.size();
+            cout << ",memory," << getMem()<< std::endl;
+        }
 
     }
-    for (map<int, int>::iterator iterator1 = edgeCount.begin(); iterator1 != edgeCount.end(); iterator1++) {
-        cout << iterator1->first << "," << iterator1->second << endl;
-    }
+
     int cycleLengthArray[50] = {0};
     int cycleLenght;
     int maxCycleLenght = 0;
@@ -425,11 +434,14 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidates> *root_can
     for (root_candidate_approx_itr = root_candidate_approx.begin();
          root_candidate_approx_itr != root_candidate_approx.end(); ++root_candidate_approx_itr) {
         DynamicDFSApprox(*root_candidate_approx_itr, window_bracket);
-        if(count%1000==0){
-            cout<<"finished processing, "<<count<<" memory, "<<getMem()<<" cycle found, "<< resultAllPath.size()<<endl;
+        count++;
+        if (count % 1000 == 0) {
+            cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, "
+                 << resultAllPath.size() << endl;
         }
     }
-    cout<<"finished processing, "<<count<<" memory, "<<getMem()<<" cycle found, "<< resultAllPath.size()<<endl;
+    cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, " << resultAllPath.size()
+         << endl;
 
     int cycleLengthArray[50] = {0};
     int cycleLenght;
@@ -487,12 +499,14 @@ int findAllCycleUsingSet(std::string dataFile, set<exactCandidates> *root_candid
          root_candidate_approx_itr != root_candidate_approx.end(); ++root_candidate_approx_itr) {
         DynamicDFSExact(*root_candidate_approx_itr, window_bracket);
         count++;
-        if(count%1000==0){
-            cout<<"finished processing, "<<count<<" memory, "<<getMem()<<" cycle found, "<< resultAllPath.size()<<endl;
+        if (count % 1000 == 0) {
+            cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, "
+                 << resultAllPath.size() << endl;
         }
 
     }
-    cout<<"finished processing, "<<count<<" memory, "<<getMem()<<" cycle found, "<< resultAllPath.size()<<endl;
+    cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, " << resultAllPath.size()
+         << endl;
 
     int cycleLengthArray[50] = {0};
     int cycleLenght;
@@ -632,7 +646,7 @@ allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_ti
             set<pair<nodeid, int>> temp;
             U[x.toVertex] = temp;
         } else {
-            if (ct[x.toVertex] <= x.time) {
+            if (ct[x.toVertex] < x.time) {
                 remove_E.insert(x);
             }
         }
@@ -795,7 +809,7 @@ set<int> getAllTime(set<pedge> E, nodeid dst) {
 
 
 set<int> DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, int window_bracket,
-                    bool isCompressed, bool candidates_provided) {
+                    bool isCompressed, bool candidates_provided, bool use_bundle) {
     ct.clear();
     U.clear();
     set<int> cycleFound;
@@ -817,21 +831,27 @@ set<int> DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidate
 
     for (auto x:neighbours) {
         if (candidates.count(x.toVertex) > 0) {
-            if (candidates_provided) {
-                std::set<int> tempcandidate = candidates;
+            if (use_bundle) {
 
-                tempcandidate.erase(x.toVertex);
-                vector<std::string> path_till_here;
-                path_till_here.push_back(to_string(rootnode) + "," + to_string(x.toVertex) + "," + to_string(x.time));
-                allPath(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, tempcandidate, &cycleFound);
             } else {
-                std::set<int> seen_node;
-                seen_node.insert(x.toVertex);
+                if (candidates_provided) {
+                    std::set<int> tempcandidate = candidates;
 
-                vector<std::string> path_till_here;
-                path_till_here.push_back(to_string(rootnode) + "," + to_string(x.toVertex) + "," + to_string(x.time));
-                allPathWithoutCandidate(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, seen_node,
-                                        &cycleFound);
+                    tempcandidate.erase(x.toVertex);
+                    vector<std::string> path_till_here;
+                    path_till_here.push_back(
+                            to_string(rootnode) + "," + to_string(x.toVertex) + "," + to_string(x.time));
+                    allPath(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, tempcandidate, &cycleFound);
+                } else {
+                    std::set<int> seen_node;
+                    seen_node.insert(x.toVertex);
+
+                    vector<std::string> path_till_here;
+                    path_till_here.push_back(
+                            to_string(rootnode) + "," + to_string(x.toVertex) + "," + to_string(x.time));
+                    allPathWithoutCandidate(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, seen_node,
+                                            &cycleFound);
+                }
             }
         }
     }
