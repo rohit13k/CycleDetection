@@ -397,7 +397,7 @@ findRootNodesApproxBothDirection(std::string input, std::string output, int wind
     int end_neighbour;
     completeSummary.clear();
     node_update_time.clear();
-   
+
     cout << "Memory after first pass after clear: " << getMem() << std::endl;
     count = 0;
     cout << rootnode_end_time_set.size() << endl;
@@ -1021,4 +1021,23 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
 
         }
     }//end of while loop
+}
+
+
+string combineSeeds(std::string root_file,int window){
+    string output_file=root_file;
+    output_file.replace(output_file.end() - 3, output_file.end(), "cmp");
+    ofstream result;
+    result.open(output_file.c_str());
+    int window_bracket = window * 60 * 60;
+    ifstream root_file_data(root_file.c_str());
+    string line;
+    std::vector<std::string> templine;
+    int root_node,t_s,t_e;
+    set<int> candidates;
+    while (root_file_data >> line) {
+        templine = Tools::Split(line, ',');
+
+    }
+
 }

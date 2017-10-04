@@ -10,6 +10,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <stack>
+#include <queue>
 
 using namespace std;
 
@@ -18,7 +20,7 @@ map<nodeid, timeGroup> rootNodes;
 map<nodeid, int> ct;//closing times
 std::set<string> resultAllPath;
 map<nodeid, set<pair<nodeid, int>>> U;//unblock list
-map<int, int> edgeCount;
+
 
 int findRootNodesAdv(std::string input, std::string output, int window, int cleanUpLimit,
                      bool reverseEdge) {
@@ -335,7 +337,8 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     int t_s;
     int t_end;
     int i = 0;
-int count=0;
+    int count = 0;
+    vector<int> all_cycle(50);
     while (infile >> line) {
         templine = Tools::Split(line, ',');
         set<nodeid> candidateset;
@@ -352,8 +355,8 @@ int count=0;
             // monitor.Start();
             //  monitorTime = time(&now);
 
-            set<int> cyclesfound = DynamicDFS(rootnode, t_s, t_end + 1, candidateset, window_bracket, isCompressed,
-                                              candidates_provided, use_bundle);
+            DynamicDFS(rootnode, t_s, t_end + 1, candidateset, window_bracket, isCompressed,
+                       candidates_provided, use_bundle, &all_cycle);
 
             /*
             cout << "Monitor Time," << monitor.LiveElapsedSeconds() << ",rootnode, ";
@@ -375,33 +378,43 @@ int count=0;
 
             std::cout << "finished cycle roots, count," << count << ",time," << parseTime;
             cout << ",cycle found," << resultAllPath.size();
-            cout << ",memory," << getMem()<< std::endl;
+            cout << ",memory," << getMem() << std::endl;
         }
 
     }
+    if (use_bundle) {
+        for (int i = 1; i < all_cycle.size() - 1; i++) {
+            cout << i << "," << all_cycle[i] << endl;
+        }
+        for (auto x:resultAllPath) {
+          cycleResult << x << "\n";
 
-    int cycleLengthArray[50] = {0};
-    int cycleLenght;
-    int maxCycleLenght = 0;
-    for (auto x:resultAllPath) {
-        templine = Tools::Split(x, ',');
-        cycleLenght = stoi(templine[1]);
+        }
+    } else {
+        int cycleLengthArray[50] = {0};
+        int cycleLenght;
+        int maxCycleLenght = 0;
+        for (auto x:resultAllPath) {
+            templine = Tools::Split(x, ',');
+            cycleLenght = stoi(templine[1]);
 
-        if (cycleLenght < 50) {
-            cycleLengthArray[cycleLenght]++;
-            if (cycleLenght > maxCycleLenght) {
-                maxCycleLenght = cycleLenght;
+            if (cycleLenght < 50) {
+                cycleLengthArray[cycleLenght]++;
+                if (cycleLenght > maxCycleLenght) {
+                    maxCycleLenght = cycleLenght;
+                }
+            } else
+                cout << "cycle of length greather than 50 found";
+            if (output.compare("") != 0) {
+                cycleResult << x << "\n";
             }
-        } else
-            cout << "cycle of length greather than 50 found";
-        if (output.compare("") != 0) {
-            cycleResult << x << "\n";
+            //cout << x << endl;
         }
-        //cout << x << endl;
-    }
-    cout << "cycles:" << endl;
-    for (int i = 1; i <= maxCycleLenght; i++) {
-        cout << i << "," << cycleLengthArray[i] << endl;
+        cout << "cycles:" << endl;
+        for (int i = 1; i <= maxCycleLenght; i++) {
+            cout << i << "," << cycleLengthArray[i] << endl;
+        }
+
     }
 
 }
@@ -631,7 +644,7 @@ void unblock(nodeid v, int t_v, int t_e) {
 
 bool
 allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_till_here,
-        std::set<int> candidates, set<int> *cycleFound) {
+        std::set<int> candidates, vector<int> *cycleLengthArray) {
     ct[w] = t_s;
     int lastp = 0;
     set<pedge> E;
@@ -654,7 +667,6 @@ allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_ti
     for (auto x:remove_E) {
         E.erase(x);
     }
-    edgeCount[E.size()]++;
 
 
     int cyclelenght;
@@ -673,7 +685,7 @@ allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_ti
                     //   std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
                     cyclelenght = path_till_here.size() + 1;
                     std::string resultline = "Found cycle," + to_string(cyclelenght) + ",";
-                    cycleFound->insert(cyclelenght);
+                    (*cycleLengthArray)[cyclelenght] = (*cycleLengthArray)[cyclelenght] + 1;
                     for (int i = 0; i < path_till_here.size(); i++) {
                         // std::cout << "->" << (path_till_here)[i];
                         resultline = resultline + "," + (path_till_here)[i];
@@ -702,7 +714,7 @@ allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_ti
             newcand.erase(x);
             vector<std::string> newpath = path_till_here;
             newpath.push_back(to_string(w) + "," + to_string(x) + "," + to_string(t_min));
-            bool pathFound = allPath(x, rootnode, t_min + 1, t_e, newpath, newcand, cycleFound);
+            bool pathFound = allPath(x, rootnode, t_min + 1, t_e, newpath, newcand, cycleLengthArray);
             if (ct[x] <= t_min || !pathFound) {
                 time_x.clear();
                 U[x].insert(make_pair(w, t_min));
@@ -721,16 +733,257 @@ allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_ti
     return (lastp > 0);
 }
 
+pathBundle expandPathBundle(pathBundle current_path, edgeBundle new_edge) {
+    timeBundle T_last;
+    pathBundle new_extended_path;
+    for (int t: new_edge.time.times) {
+        if (t > current_path.getLastEdge().time.getMinTime()) {
+            T_last.times.insert(t);
+        }
+    }
+
+    if (T_last.size() > 0) {
+        //add the last edge with the new time bundle T_last in the current path to extend it.
+        new_edge.time = T_last;
+        new_extended_path.path = current_path.path;
+        new_extended_path.path.push_back(new_edge);
+
+        //update the time bundle on all the other edge accordingly
+        timeBundle T_i;
+        int k = current_path.path.size();
+        for (int i = k - 1; i >= 0; i--) {
+            for (int t: new_extended_path.path[i].time.times) {
+                int max_t = new_extended_path.path[i + 1].time.getMaxTime();
+                if (t < max_t) {
+                    T_i.times.insert(t);
+                }
+            }
+            new_extended_path.path[i].time = T_i;
+            T_i.times.clear();
+        }
+    }
+    return new_extended_path;
+}
+
+int pathCount(pathBundle pb) {
+    std::priority_queue<pair<int, int>, vector<pair<int, int>>, myComparator> H_prev;
+    H_prev.push(make_pair(0, 1));
+    int cycle_length = pb.path.size();
+    int n, prev, t, t_, n_;
+    for (int i = 0; i < cycle_length; i++) {
+        std::priority_queue<pair<int, int>, vector<pair<int, int>>, myComparator> H_i;
+        n = 0;
+        prev = 0;
+        for (set<int>::iterator it = pb.path[i].time.times.begin(); it != pb.path[i].time.times.end(); it++) {
+            t = *it;
+            if (!H_prev.empty()) {
+                pair<int, int> temp = H_prev.top();
+                t_ = temp.first;
+                n_ = temp.second;
+                while (t_ < t) {
+                    H_prev.pop();
+                    n = n_;
+                    if (H_prev.empty()) {
+                        break;
+                    } else {
+                        temp = H_prev.top();
+                        t_ = temp.first;
+                        n_ = temp.second;
+                    }
+                }
+
+            }
+            H_i.push(make_pair(t, prev + n));
+            prev = prev + n;
+        }
+        H_prev = H_i;
+    }
+    while (H_prev.size() > 1) {
+        H_prev.pop();
+    }
+    return H_prev.top().second;
+
+}
+
+void testCountPath() {
+    timeBundle tb;
+    tb.times.insert(1196831926);
+   // tb.times.insert(1196833908);
+
+    edgeBundle eb;
+    eb.from_node = 3170;
+    eb.to_node = 11161;
+    eb.time = tb;
+    pathBundle pb;
+    pb.path.push_back(eb);
+
+    tb.times.clear();
+    tb.times.insert(1196833283);
+    tb.times.insert(1196833468);
+
+    eb.from_node = 11161;
+    eb.to_node = 13140;
+    eb.time = tb;
+    pb.path.push_back(eb);
+
+    tb.times.clear();
+    tb.times.insert(1196833387);
+    tb.times.insert(1196833735);
+
+    eb.from_node = 13140;
+    eb.to_node = 2734;
+    eb.time = tb;
+    pb.path.push_back(eb);
+
+
+    tb.times.clear();
+    tb.times.insert(1196833736);
+    tb.times.insert(1196833986);
+    eb.from_node = 2734;
+    eb.to_node = 3170;
+    eb.time = tb;
+    pb.path.push_back(eb);
+
+    int num_path = pathCount(pb);
+    cout << num_path << endl;
+}
+
+int
+allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidates, vector<int> *cycleLengthArray) {
+    edgeBundle lastEdge = path_bundle_till_here.getLastEdge();
+    int t_current = lastEdge.time.getMinTime();
+    int v_current = lastEdge.to_node;
+    int rootnode = path_bundle_till_here.getRootNode();
+    ct[v_current] = t_current;
+    int lastp = 0;
+    set<pedge> E;
+    set<nodeid> V;
+    set<pedge> remove_E;
+    E = getFilteredData(v_current, t_current + 1, t_e, &candidates);
+
+    for (auto x: E) {
+        V.insert(x.toVertex);
+        if (ct.count(x.toVertex) == 0) {// if seen for the first time initialize close time and dependent list
+            ct[x.toVertex] = std::numeric_limits<int>::max();
+            set<pair<nodeid, int>> temp;
+            U[x.toVertex] = temp;
+        } else {
+            if (ct[x.toVertex] < x.time) {
+                remove_E.insert(x);
+            }
+        }
+    }
+    for (auto x:remove_E) {
+        E.erase(x);
+    }
+    if (E.size() == 0) {
+        return lastp;
+    }
+
+    int cyclelenght;
+    for (auto x: E) {
+        if (candidates.count(x.toVertex) > 0) {
+            V.insert(x.toVertex);
+        }
+    }
+    if (V.count(rootnode) > 0) {
+        timeBundle T;
+        T.times = getAllTime(E, rootnode);
+        int max_t = T.getMaxTime();
+        if (max_t > lastp) {
+            lastp = max_t;
+        }
+        edgeBundle closing_edge;
+        closing_edge.from_node = v_current;
+        closing_edge.to_node = rootnode;
+        closing_edge.time = T;
+        pathBundle cycle = expandPathBundle(path_bundle_till_here, closing_edge);
+        int cycle_length = cycle.path.size();
+        if (cycle_length > 2) {
+            resultAllPath.insert(cycle.printPath());
+            int total_cycles = pathCount(cycle);
+            (*cycleLengthArray)[cycle_length] = (*cycleLengthArray)[cycle_length] + total_cycles;
+
+
+        }
+
+
+    }
+    V.erase(rootnode);
+    timeBundle time_x;
+    timeBundle new_time_x;
+    int t_min;
+    bool not_present;
+    for (auto x: V) {
+        if (ct.count(x) == 0) {
+            ct[x] = std::numeric_limits<int>::max();
+            set<pair<nodeid, int>> temp;
+            U[x] = temp;
+        }
+        time_x.times = getAllTime(E, x);
+        for (int t:time_x.times) {
+            if (t < ct[x]) {
+                new_time_x.times.insert(t);
+            }
+        }
+        if (time_x.size() == 0) {
+            return lastp;
+        }
+        edgeBundle eb;
+        eb.time = time_x;
+        eb.from_node = v_current;
+        eb.to_node = x;
+        pathBundle newPathBundle=expandPathBundle(path_bundle_till_here, eb);
+        if(newPathBundle.path.size()==0){
+            return lastp;
+        }
+        int last_x = allPathBundle(newPathBundle, t_e, candidates, cycleLengthArray);
+        if (last_x > lastp) {
+            lastp = last_x;
+        }
+        timeBundle F_x;
+        for (int tempt:time_x.times) {
+            if (tempt > last_x) {
+                F_x.times.insert(tempt);
+            }
+        }
+
+        if (F_x.size() > 0) {
+            t_min = *F_x.times.begin();
+            not_present = true;
+            for (auto temp_pair:U[x]) {
+                if (temp_pair.first == v_current) {
+                    if (temp_pair.second > t_min) {
+                        U[x].erase(temp_pair);
+                        U[x].insert(make_pair(v_current, t_min));
+
+                    }
+                    not_present = false;
+                }
+            }
+            if (not_present) {
+                U[x].insert(make_pair(v_current, t_min));
+            }
+
+
+        }
+
+    }
+    if (lastp > 0) {
+        unblock(v_current, lastp, t_e);
+    }
+    return lastp;
+}
+
+
 bool
 allPathWithoutCandidate(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_till_here,
-                        std::set<int> seen_node, set<int> *cycleFound) {
+                        std::set<int> seen_node, vector<int> *cycleLengthArray) {
     ct[w] = t_s;
     int lastp = 0;
     set<pedge> E;
     E = getFilteredData(w, t_s + 1, t_e);
 
-
-    edgeCount[E.size()]++;
 
     set<nodeid> V;
     int cyclelenght;
@@ -749,7 +1002,7 @@ allPathWithoutCandidate(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std:
                     //   std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
                     cyclelenght = path_till_here.size() + 1;
                     std::string resultline = "Found cycle," + to_string(cyclelenght) + ",";
-                    cycleFound->insert(cyclelenght);
+                    (*cycleLengthArray)[cyclelenght] = (*cycleLengthArray)[cyclelenght] + 1;
                     for (int i = 0; i < path_till_here.size(); i++) {
                         // std::cout << "->" << (path_till_here)[i];
                         resultline = resultline + "," + (path_till_here)[i];
@@ -778,7 +1031,8 @@ allPathWithoutCandidate(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std:
             new_seen_node.insert(x);
             vector<std::string> newpath = path_till_here;
             newpath.push_back(to_string(w) + "," + to_string(x) + "," + to_string(t_min));
-            bool pathFound = allPathWithoutCandidate(x, rootnode, t_min + 1, t_e, newpath, new_seen_node, cycleFound);
+            bool pathFound = allPathWithoutCandidate(x, rootnode, t_min + 1, t_e, newpath, new_seen_node,
+                                                     cycleLengthArray);
             if (ct[x] <= t_min || !pathFound) {
                 time_x.clear();
                 U[x].insert(make_pair(w, t_min));
@@ -797,6 +1051,12 @@ allPathWithoutCandidate(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std:
     return (lastp > 0);
 }
 
+/**
+ * Get all time t for node x such that *,x,t is in E
+ * @param E
+ * @param dst
+ * @return set<time>
+ */
 set<int> getAllTime(set<pedge> E, nodeid dst) {
     set<int> times;
     for (auto x: E) {
@@ -808,11 +1068,11 @@ set<int> getAllTime(set<pedge> E, nodeid dst) {
 }
 
 
-set<int> DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, int window_bracket,
-                    bool isCompressed, bool candidates_provided, bool use_bundle) {
+void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, int window_bracket,
+                bool isCompressed, bool candidates_provided, bool use_bundle, vector<int> *cycleLengthArray) {
     ct.clear();
     U.clear();
-    set<int> cycleFound;
+
 
     candidates.insert(rootnode);
 
@@ -828,12 +1088,32 @@ set<int> DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidate
     } else {
         neighbours = getFilteredData(rootnode, t_s);// all the edges of type rootnode,*,t_s
     }
+    if (use_bundle) {
+        timeBundle tb;
+        for (auto x:neighbours) {
+            if (candidates.count(x.toVertex) > 0) {
 
-    for (auto x:neighbours) {
-        if (candidates.count(x.toVertex) > 0) {
-            if (use_bundle) {
+                tb.times = getAllTime(neighbours, x.toVertex);
+                if (tb.times.size() > 0) {
+                    std::set<int> tempcandidate = candidates;
 
-            } else {
+                    tempcandidate.erase(x.toVertex);
+                    pathBundle path_bundle_till_here;
+                    edgeBundle eb;
+                    eb.from_node = rootnode;
+                    eb.to_node = x.toVertex;
+                    eb.time = tb;
+                    path_bundle_till_here.path.push_back(eb);
+
+                    allPathBundle(path_bundle_till_here, t_end, tempcandidate, cycleLengthArray);
+                }
+            }
+        }
+    } else {
+        for (auto x:neighbours) {
+            if (candidates.count(x.toVertex) > 0) {
+
+
                 if (candidates_provided) {
                     std::set<int> tempcandidate = candidates;
 
@@ -841,7 +1121,7 @@ set<int> DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidate
                     vector<std::string> path_till_here;
                     path_till_here.push_back(
                             to_string(rootnode) + "," + to_string(x.toVertex) + "," + to_string(x.time));
-                    allPath(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, tempcandidate, &cycleFound);
+                    allPath(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, tempcandidate, cycleLengthArray);
                 } else {
                     std::set<int> seen_node;
                     seen_node.insert(x.toVertex);
@@ -850,13 +1130,13 @@ set<int> DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidate
                     path_till_here.push_back(
                             to_string(rootnode) + "," + to_string(x.toVertex) + "," + to_string(x.time));
                     allPathWithoutCandidate(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, seen_node,
-                                            &cycleFound);
+                                            cycleLengthArray);
                 }
+
             }
         }
     }
 
-    return cycleFound;
 }
 
 
@@ -1101,7 +1381,7 @@ allPathExact(int w, int rootnode, int t_s, int t_e, vector<std::string> path_til
             set<pair<nodeid, int>> temp;
             U[x.toVertex] = temp;
         } else {
-            if (ct[x.toVertex] < x.time) {
+            if (ct[x.toVertex] <= x.time) {
                 int temp = ct[x.toVertex];
                 remove_E.insert(x);
             }

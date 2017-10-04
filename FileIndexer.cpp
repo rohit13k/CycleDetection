@@ -48,7 +48,8 @@ int readFile(std::string inputFile, bool reverseEdge) {
 }
 
 /*
- * Returns list of edges <src,x,t> such that t is between t_s and t_end and if candidates list is provided x should be in candidates
+ * Returns list of edges <src,x,t> such that t is between t_s and t_end
+ * and if candidates list is provided x should be in candidates
  */
 std::set<pedge> getFilteredData(int src, int t_s, int t_end, set<int> *candidates) {
     std::set<pedge> result;

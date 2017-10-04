@@ -45,7 +45,102 @@ struct approxCandidates {
     }
 
 };
+struct timeBundle{
+    set<int> times;
+    bool operator==(const timeBundle &rhs) const {
+        return times==rhs.times;
 
+    }
+    bool operator<(const timeBundle &rhs) const {
+        if(times.size()==rhs.times.size()){
+            return *times.end()<*rhs.times.end();
+        }else{
+            return times.size()<rhs.times.size();
+        }
+    }
+    string string_format(){
+        string result="(";
+        int count=0;
+        for(int x:times){
+            if(count==0){
+                count++;
+                result=result+to_string(x);
+            }else {
+                result = result + ":" + to_string(x);
+            }
+        }
+        result=result+")";
+        return result;
+    }
+    int size(){
+        return times.size();
+    }
+    int getMinTime(){
+        if(size()>0){
+            return *times.begin();
+        }else{
+            return -1;
+        }
+    }
+    int getMaxTime(){
+        if(size()>0){
+
+            return *times.rbegin();
+        }else{
+            return -1;
+        }
+    }
+};
+
+struct edgeBundle{
+    int from_node;
+    int to_node;
+    timeBundle time;
+    bool operator==(const edgeBundle &rhs) const {
+        return from_node==rhs.from_node & to_node==rhs.to_node & time==rhs.time;
+    }
+    bool operator<(const edgeBundle &rhs) const {
+
+        if (from_node==rhs.from_node) {
+
+            if(to_node==rhs.to_node){
+                return time<rhs.time;
+            }else{
+                return to_node<rhs.to_node;
+            }
+
+        } else
+            return from_node<rhs.from_node;
+    }
+    string printEdgeBundle(){
+        return to_string(from_node)+","+to_string(to_node)+","+time.string_format();
+    }
+};
+struct pathBundle{
+    vector<edgeBundle> path;
+    int getRootNode(){
+        if(path.size()>0){
+            return path[0].from_node;
+        }else{
+            return -1;
+        }
+    }
+    edgeBundle getLastEdge(){
+        if(path.size()==0){
+            cout<<"error"<<endl;
+        }
+        return path[path.size()-1];
+    }
+
+    string printPath(){
+        string result="Path Length,"+to_string(path.size())+",";
+        for(edgeBundle eb:path){
+            result=result+eb.printEdgeBundle()+",";
+        }
+        return result;
+    }
+
+};
 struct exactCandidates {
     std::set<pair<int, int>> neighbours_time;
     int root_node;
@@ -127,11 +222,12 @@ int findRootNodes(std::string input, std::string output, int window,int cleanUpL
 set<int> getAllTime(std::set<pedge> E, nodeid dst);
 
 bool allPath(nodeid w, nodeid rootnode, int t_s, int t_e, std::vector <std::string> path_till_here,
-             std::set<nodeid> candidates, std::set<int> *cycleFound);
+             std::set<nodeid> candidates, vector<int> *cycleLengthArray);
 bool allPathWithoutCandidate(nodeid w, nodeid rootnode, int t_s, int t_e, std::vector <std::string> path_till_here,
-             std::set<nodeid> seen_node, std::set<int> *cycleFound);
-std::set<int> DynamicDFS(nodeid rootnode,int t_s,int t_end, std::set<int> candidates, int window_bracket,bool isCompressed,bool candidates_provided, bool use_bundle);
+             std::set<nodeid> seen_node, vector<int> *cycleLengthArray);
 
+void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, int window_bracket,
+                bool isCompressed, bool candidates_provided, bool use_bundle,vector<int> *cycleLengthArray);
 void findAllCycleNaive(std::string inputGraph,std::string resultFile,int window,bool reverseEdge);
 int cleanup(std::map<nodeid,std::map<int, std::set<nodeid>>> *completeSummary,int timestamp,int window_bracket);
 int cleanupAdv(int timestamp,int window_bracket,double_llist *last_updated_time_list);
@@ -145,7 +241,21 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidates> *root_can
 void DynamicDFSExact(exactCandidates candidate, int window_bracket);
 int findAllCycleUsingSet(std::string dataFile, set<exactCandidates> *root_candidates, std::string output,
                          int window, bool reverseEdge);
-bool
-allPathExact(int w, int rootnode, int t_s, int t_e, vector<std::string> path_till_here,
+bool allPathExact(int w, int rootnode, int t_s, int t_e, vector<std::string> path_till_here,
              set<int> candidates);
+
+
+int allPathBundle(pathBundle path_bundle_till_here,  int t_e,  std::set<int> candidates, set<int> *cycleFound);
+pathBundle expandPathBundle(pathBundle current_path, edgeBundle new_edge);
+int pathCount(pathBundle pb);
+void testCountPath();
+// To compare two points
+class myComparator
+{
+public:
+    int operator() (const pair<int,int>& p1, const pair<int,int>& p2)
+    {
+        return p1.first > p2.first;
+    }
+};
 #endif //CYCLEDETECTION_DETECTCYCLEROOT_H

@@ -170,13 +170,17 @@ int main(int argc, char **argv) {
             use_bundle = true;
             std::string cycleFile = resultFile;
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");
+            //findRootNodesNew(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
             std::cout << "Finding cycles using bundle approach : input: " << inputGraph << " result: "
                       << cycleFile << std::endl;
             findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
                          candidates_provided, use_bundle);
             std::cout << "Found all cycles nodes using bundle and time " << timer.LiveElapsedSeconds() - pend
                       << std::endl;
-        } else {
+        }else if (rootAlgo == 10) {
+            testCountPath();
+        }
+        else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
         }
 
