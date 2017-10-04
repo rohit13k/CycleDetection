@@ -387,7 +387,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
             cout << i << "," << all_cycle[i] << endl;
         }
         for (auto x:resultAllPath) {
-          cycleResult << x << "\n";
+            cycleResult << x << "\n";
 
         }
     } else {
@@ -808,7 +808,7 @@ int pathCount(pathBundle pb) {
 void testCountPath() {
     timeBundle tb;
     tb.times.insert(1196831926);
-   // tb.times.insert(1196833908);
+    // tb.times.insert(1196833908);
 
     edgeBundle eb;
     eb.from_node = 3170;
@@ -868,7 +868,7 @@ allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidate
             set<pair<nodeid, int>> temp;
             U[x.toVertex] = temp;
         } else {
-            if (ct[x.toVertex] < x.time) {
+            if (ct[x.toVertex] <= x.time) {
                 remove_E.insert(x);
             }
         }
@@ -926,48 +926,46 @@ allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidate
                 new_time_x.times.insert(t);
             }
         }
-        if (time_x.size() == 0) {
-            return lastp;
-        }
-        edgeBundle eb;
-        eb.time = time_x;
-        eb.from_node = v_current;
-        eb.to_node = x;
-        pathBundle newPathBundle=expandPathBundle(path_bundle_till_here, eb);
-        if(newPathBundle.path.size()==0){
-            return lastp;
-        }
-        int last_x = allPathBundle(newPathBundle, t_e, candidates, cycleLengthArray);
-        if (last_x > lastp) {
-            lastp = last_x;
-        }
-        timeBundle F_x;
-        for (int tempt:time_x.times) {
-            if (tempt > last_x) {
-                F_x.times.insert(tempt);
-            }
-        }
+        if (time_x.size() != 0) {
 
-        if (F_x.size() > 0) {
-            t_min = *F_x.times.begin();
-            not_present = true;
-            for (auto temp_pair:U[x]) {
-                if (temp_pair.first == v_current) {
-                    if (temp_pair.second > t_min) {
-                        U[x].erase(temp_pair);
-                        U[x].insert(make_pair(v_current, t_min));
-
+            edgeBundle eb;
+            eb.time = time_x;
+            eb.from_node = v_current;
+            eb.to_node = x;
+            pathBundle newPathBundle = expandPathBundle(path_bundle_till_here, eb);
+            if (newPathBundle.path.size() != 0) {
+                int last_x = allPathBundle(newPathBundle, t_e, candidates, cycleLengthArray);
+                if (last_x > lastp) {
+                    lastp = last_x;
+                }
+                timeBundle F_x;
+                for (int tempt:time_x.times) {
+                    if (tempt > last_x) {
+                        F_x.times.insert(tempt);
                     }
-                    not_present = false;
+                }
+
+                if (F_x.size() > 0) {
+                    t_min = *F_x.times.begin();
+                    not_present = true;
+                    for (auto temp_pair:U[x]) {
+                        if (temp_pair.first == v_current) {
+                            if (temp_pair.second > t_min) {
+                                U[x].erase(temp_pair);
+                                U[x].insert(make_pair(v_current, t_min));
+
+                            }
+                            not_present = false;
+                        }
+                    }
+                    if (not_present) {
+                        U[x].insert(make_pair(v_current, t_min));
+                    }
+
+
                 }
             }
-            if (not_present) {
-                U[x].insert(make_pair(v_current, t_min));
-            }
-
-
         }
-
     }
     if (lastp > 0) {
         unblock(v_current, lastp, t_e);

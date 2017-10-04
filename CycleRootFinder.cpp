@@ -602,7 +602,8 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
         root_neigbhour_time = updateSummaryExact(src, dst, timestamp, window_bracket, &completeSummary,
                                                  &node_update_time);
         if (root_neigbhour_time.first != 0) {
-//check if there is a valid end for this start node.
+
+            //check if there is a valid end for this start node.
             rootnode_end_time_set_itr = rootnode_end_time_set.find(root_neigbhour_time.first);
             if (rootnode_end_time_set_itr != rootnode_end_time_set.end()) {
 
