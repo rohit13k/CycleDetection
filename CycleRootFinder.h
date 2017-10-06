@@ -35,6 +35,7 @@ struct tnode {
 };
 
 
+
 struct cycle_time {
     int start_time;
     int end_time;
@@ -57,7 +58,6 @@ struct cycle_time {
             return start_time < rhs.start_time;
     }
 };
-
 int findRootNodesNew(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge);
 
 set<int> getCandidatesNew(map<int, int> *summary, int t_s, int t_e);
@@ -76,8 +76,7 @@ cleanup(map<int, bloom_filter> *completeSummary, map<int, int> *node_update_time
 
 int findRootNodesApprox(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge);
 
-set<approxCandidates> findRootNodesApproxBothDirection
-        (std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge);
+set<approxCandidates> findRootNodesApproxBothDirection(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge);
 
 int findCandidateFromApprox(std::string input, string root_file, std::string output, int window, int cleanUpLimit,
                             bool reverseEdge);
@@ -93,17 +92,18 @@ compressRootCandidates(map<int, map<cycle_time, map<int, bloom_filter>>> *root_c
                        int window_bracket);
 
 
-pair<int, pair<int, int>>
+pair<int, edge>
 updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int, set<int>> *summary,
                    map<int, int> *update_time);
 
-void mergeSummaries(map<int, set<int>> *summary, exactCandidates *ac, int start_time);
+
 
 set<exactCandidates>
-compressRootCandidates(map<int, map<cycle_time, map<int, set<int>>>> *root_candidates, int window_bracket);
+compressRootCandidates(map<int, map<edge, pair<int, set<int>>>> *root_candidates, int window_bracket);
 set<exactCandidates>
 findRootNodesExactBothDirection(std::string input, std::string output, int window, int cleanUpLimit,
                                 bool reverseEdge);
 void print(map<int, map<cycle_time, map<int, set<int>>>> root_candidate_exact);
 void print(set<exactCandidates> final_roots);
+int cleanup(map<int, set<int>> *completeSummary, map<int, int> *node_update_time, int timestamp, int window_bracket);
 #endif //CYCLEDETECTION_CYCLEROOTFINDER_H

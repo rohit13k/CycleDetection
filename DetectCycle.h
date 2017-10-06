@@ -14,6 +14,7 @@
 #include "double_llist.h"
 
 
+
 typedef int nodeid;
 
 typedef std::set<nodeid> nodeSet;
@@ -55,7 +56,7 @@ struct timeBundle{
         if(times.size()==rhs.times.size()){
             return *times.end()<*rhs.times.end();
         }else{
-            return times.size()<rhs.times.size();
+            return times.size()>rhs.times.size();
         }
     }
     string string_format(){
@@ -115,6 +116,9 @@ struct edgeBundle{
     string printEdgeBundle(){
         return to_string(from_node)+","+to_string(to_node)+","+time.string_format();
     }
+    string edgeSignature(){
+        return to_string(from_node)+","+to_string(to_node);
+    }
 };
 struct pathBundle{
     vector<edgeBundle> path;
@@ -139,10 +143,75 @@ struct pathBundle{
         }
         return result;
     }
+    string pathSignature()const {
+        string result="";
+        for(edgeBundle eb:path){
+            result=result+eb.edgeSignature()+",";
+        }
+        return result;
+    }
+    bool operator<(const pathBundle &rhs) const {
+
+        if(path.size()==rhs.path.size()&path.size()>0){
+            if(path[0].from_node==rhs.path[0].from_node){
+                if(path[0].to_node==rhs.path[0].to_node) {
+                    string lhs_sig=pathSignature();
+                    string rhs_sig=rhs.pathSignature();
+
+                    if(lhs_sig.compare(rhs_sig)!=0){
+                        return lhs_sig<rhs_sig;
+                    }else {
+                        timeBundle rhs_t = rhs.path[0].time;
+                        timeBundle lhs_t = path[0].time;
+                        if (lhs_t.getMinTime() == rhs_t.getMinTime()) {
+
+                            return lhs_t.size() > rhs_t.size();
+                        } else {
+
+                            return lhs_t.getMinTime() < rhs_t.getMinTime();
+                        }
+                    }
+                }else{
+                    return path[0].to_node < rhs.path[0].to_node;
+                }
+            }else{
+                return path[0].from_node < rhs.path[0].from_node;
+            }
+
+        }else{
+            return path.size() < rhs.path.size();
+        }
+
+    }
 
 };
+
+
+
+struct edge {
+    int node;
+    int time;
+
+    bool operator==(const edge &rhs) const {
+        if ((time == rhs.time & node == rhs.node)) {
+            return true;
+        } else {
+            false;
+        }
+    }
+
+    bool operator<(const edge &rhs) const {
+
+        if (node == rhs.node) {
+
+            return time < rhs.time;
+
+        } else
+            return node < rhs.node;
+    }
+};
 struct exactCandidates {
-    std::set<pair<int, int>> neighbours_time;
+    std::set<edge> neighbours_time; //set of nodeid,start_time
     int root_node;
 
     int end_time;
@@ -238,9 +307,9 @@ bool allPathApprox(int w, int rootnode, int t_s, int t_e, vector<std::string> pa
               bloom_filter candidates);
 int findAllCycleUsingBloom(std::string dataFile, set<approxCandidates> *root_candidates, std::string output,
                            int window, bool reverseEdge);
-void DynamicDFSExact(exactCandidates candidate, int window_bracket);
+void DynamicDFSExact(exactCandidates candidate, int window_bracket,bool use_bundle, vector<int> *cycleLengthArray);
 int findAllCycleUsingSet(std::string dataFile, set<exactCandidates> *root_candidates, std::string output,
-                         int window, bool reverseEdge);
+                         int window, bool reverseEdge,bool  use_bundle);
 bool allPathExact(int w, int rootnode, int t_s, int t_e, vector<std::string> path_till_here,
              set<int> candidates);
 
@@ -258,4 +327,6 @@ public:
         return p1.first > p2.first;
     }
 };
+
+bool is_overlapping(pathBundle *pathBundle1,pathBundle *pathBundle2);
 #endif //CYCLEDETECTION_DETECTCYCLEROOT_H
