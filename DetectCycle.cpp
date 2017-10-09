@@ -803,14 +803,14 @@ int findAllCycleUsingBloomNew(std::string dataFile, set<approxCandidatesNew> *ro
         for (int i = 1; i <= maxCycleLenght; i++) {
             cout << i << "," << all_cycle[i] << endl;
         }
-
+/*
         cout << "printing count for length 3" << endl;
         for (map<int, int>::iterator it = cycle_3_count.begin(); it != cycle_3_count.end(); it++) {
             if (it->second != 0) {
                 cout << it->first << "," << it->second << endl;
             }
         }
-
+*/
 
     } else {
         int cycleLengthArray[50] = {0};
