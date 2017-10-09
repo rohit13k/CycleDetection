@@ -460,7 +460,7 @@ findRootNodesApproxBothDirection(std::string input, std::string output, int wind
     }
     result.close();
 
-    std::cout << "finished parsing all " << timer.LiveElapsedSeconds() << std::endl;
+    std::cout << "Time to find seeds: " << timer.LiveElapsedSeconds() << std::endl;
     std::cout << "#root founds: " << root_candidate_approx.size() << std::endl;
     std::cout << "Memory after 2nd phase: " << getMem() << std::endl;
     completeSummary.clear();
