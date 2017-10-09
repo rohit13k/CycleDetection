@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
             std::cout << "Finding cycles using  bloom: input: " << inputGraph << " result: " << resultFile << std::endl;
 
            // findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile, window, reverseEdge,use_bundle.getValue());
-            findAllCycleUsingBloomNew(inputGraph, &root_candidates, resultFile, window, reverseEdge,true);
+            findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile, window, reverseEdge,true);
             std::cout << "Time to find cycle using bloom: " << timer.LiveElapsedSeconds() - pend << std::endl;
 
         } else if (rootAlgo == 8) {

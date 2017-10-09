@@ -19,33 +19,6 @@ typedef int nodeid;
 typedef std::set<nodeid> nodeSet;
 typedef std::map<int, nodeSet> timeGroup;
 
-struct approxCandidates {
-    std::set<pair<int, int>> neighbours_time;
-    int root_node;
-
-    int end_time;
-    bloom_filter candidates_nodes;
-
-    bool operator==(const approxCandidates &rhs) const {
-        if (root_node == rhs.root_node & end_time == rhs.end_time) {
-            return true;
-        } else {
-            false;
-        }
-    }
-
-    bool operator<(const approxCandidates &rhs) const {
-
-        if (root_node == rhs.root_node) {
-
-            return end_time < rhs.end_time;
-
-        } else
-            return root_node < rhs.root_node;
-    }
-
-};
-
 struct approxCandidatesNew {
     std::map<int, bloom_filter> neighbours_candidates;
     int root_node;
@@ -349,6 +322,26 @@ struct nodeSummary {
 
 
 };
+struct endNode {
+   int node_id;
+    int end_time;
+    bloom_filter candidates;
+    bool operator<(const endNode &rhs) const {
+        if (rhs.node_id == node_id) {
+            return end_time<rhs.end_time;
+        } else
+            return node_id < rhs.end_time;
+    }
+
+    bool operator==(const endNode &rhs) const {
+        if (node_id==rhs.node_id&end_time==rhs.end_time) {
+           return true;
+        } else {
+            return false;
+        }
+    }
+
+};
 
 int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string output, int window,
                  bool isCompressed, bool reverseEdge, bool candidates_provided, bool use_bundle);
@@ -383,13 +376,12 @@ int cleanupAdv(int timestamp, int window_bracket, double_llist *last_updated_tim
 
 int findRootNodesAdv(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge);
 
-void DynamicDFSApprox(approxCandidates candidate, int window_bracket, bool use_bundle, vector<int> *cycleLengthArray);
+
 
 bool allPathApprox(int w, int rootnode, int t_s, int t_e, vector<std::string> path_till_here,
                    bloom_filter candidates);
 
-int findAllCycleUsingBloom(std::string dataFile, set<approxCandidates> *root_candidates, std::string output,
-                           int window, bool reverseEdge, bool use_bundle);
+
 
 void DynamicDFSExact(exactCandidates candidate, int window_bracket, bool use_bundle, vector<int> *cycleLengthArray);
 
@@ -421,10 +413,10 @@ public:
 
 bool is_overlapping(pathBundle *pathBundle1, pathBundle *pathBundle2);
 
-int findAllCycleUsingBloomNew(std::string dataFile, set<approxCandidatesNew> *root_candidates, std::string output,
+int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_candidates, std::string output,
                               int window, bool reverseEdge, bool use_bundle);
 
 void
-DynamicDFSApproxNew(approxCandidatesNew candidate, int window_bracket, bool use_bundle, vector<int> *cycleLengthArray);
+DynamicDFSApprox(approxCandidatesNew candidate, int window_bracket, bool use_bundle, vector<int> *cycleLengthArray);
 
 #endif //CYCLEDETECTION_DETECTCYCLEROOT_H
