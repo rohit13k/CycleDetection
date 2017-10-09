@@ -591,6 +591,9 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
                      possible_end_time_set_it != possible_end_time_set.end(); ++possible_end_time_set_it) {
                     end_time = possible_end_time_set_it->second;
                     end_neighbour = possible_end_time_set_it->first;
+                    if(end_time==1176433438&timestamp==1176429980){
+                        cout<<endl;
+                    }
                     if (end_time - timestamp > 0 & end_time - timestamp < window_bracket) {
                         if (dst != end_neighbour) {
                             result << src << ",";
@@ -607,13 +610,18 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
                                         int min_ts=min(cycle_itr->first.start_time,timestamp);
                                         int max_te=max(cycle_itr->first.end_time,end_time);
                                         if(max_te-min_ts<window_bracket){
-                                            map<int, bloom_filter> &temp=cycle_itr->second;
-                                            temp[dst]=completeSummary[dst];
-                                            cycle_time ct;
-                                            ct.start_time = min_ts;
-                                            ct.end_time = max_te;
-                                            root_candidate_approx[src][ct]=temp;
-                                            root_candidate_approx[src].erase(cycle_itr);
+                                            cycle_time old_ct=cycle_itr->first;
+                                            cycle_time new_ct;
+                                            new_ct.start_time = min_ts;
+                                            new_ct.end_time = max_te;
+                                            if(new_ct==old_ct){
+
+                                            }else {
+                                                map<int, bloom_filter> &temp = cycle_itr->second;
+                                                temp[dst] = completeSummary[dst];
+                                                root_candidate_approx[src][new_ct] = temp;
+                                                root_candidate_approx[src].erase(old_ct);
+                                            }
                                             added=true;
                                             break;
 
