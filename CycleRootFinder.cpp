@@ -509,7 +509,7 @@ void print(set<exactCandidates> final_roots) {
         if (x.root_node == 13140) {
             cout << x.root_node << "," << x.end_time << ",";
             for (auto y:x.neighbours_time) {
-                cout << y.node << "-" << y.time << ",";
+                cout << y.first << "-" << y.second << ",";
             }
             for (auto z:x.candidates_nodes) {
                 cout << z << ",";
@@ -523,16 +523,14 @@ set<exactCandidates>
 findRootNodesExactBothDirection(std::string input, std::string output, int window, int cleanUpLimit,
                                 bool reverseEdge) {
     map<int, set<int>> completeSummary;
-
-    // map<int, map<cycle_time, map<int, set<int>>>> root_candidate_exact;
-    //map<root,map<start time,start node,<max end time in window from start time, candidates>>>>
-    map<int, map<edge, pair<int, set<int>>>> root_candidate_exact;
-
+    //map<root,map<<t_start,t_end>,<dst,approx candidateset>>>
+    map<int, map<cycle_time, map<int, set<int>>>> root_candidate_exact;
     map<int, int> node_update_time;
-    map<int, set<edge>> rootnode_end_time_set;
-    map<int, set<edge>>::iterator rootnode_end_time_set_itr;
+    map<int, set<pair<int, int>>> rootnode_end_time_set;
+    map<int, set<pair<int, int>>>::iterator rootnode_end_time_set_itr;
 
-    pair<int, edge> root_neigbhour_time;
+    pair<int, pair<int, int>> root_neigbhour_time;
+
 
     std::vector<std::string> templine;
     ifstream infile(input.c_str());
@@ -565,7 +563,7 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
 
         all_data.push_back(line);
         root_neigbhour_time = updateSummaryExact(dst, src, timestamp, window_bracket, &completeSummary,
-                                                 &node_update_time);
+                                            &node_update_time);
         if (root_neigbhour_time.first != 0) {
             rootnode_end_time_set[root_neigbhour_time.first].insert(root_neigbhour_time.second);
         }
@@ -584,11 +582,17 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
         }
     }
 
-
+    int end_time;
+    cout << "Memory after first pass: " << getMem() << std::endl;
+    int end_neighbour;
     completeSummary.clear();
     node_update_time.clear();
+
+    cout << "Memory after first pass after clear: " << getMem() << std::endl;
     count = 0;
     cout << rootnode_end_time_set.size() << endl;
+    set<pair<int, int>>::iterator possible_end_time_set_it;
+
     for (int j = all_data.size() - 1; j >= 0; j--) {
         line = all_data[j];
         templine = Tools::Split(line, ',');
@@ -601,49 +605,30 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
         timestamp = stoi(templine[2]);
 
         root_neigbhour_time = updateSummaryExact(src, dst, timestamp, window_bracket, &completeSummary,
-                                                 &node_update_time);
+                                            &node_update_time);
         if (root_neigbhour_time.first != 0) {
-
-            //check if there is a valid end for this start node.
+//check if there is a valid end for this start node.
             rootnode_end_time_set_itr = rootnode_end_time_set.find(root_neigbhour_time.first);
             if (rootnode_end_time_set_itr != rootnode_end_time_set.end()) {
 
-                set<edge> &possible_end_time_set = rootnode_end_time_set_itr->second;
+                set<pair<int, int>> &possible_end_time_set = rootnode_end_time_set_itr->second;
 
-                for (set<edge>::iterator it = possible_end_time_set.begin();
-                     it != possible_end_time_set.end(); ++it) {
-                    edge end_edge = *it;
-
-                    edge start_edge;
-                    start_edge.time = timestamp;
-                    start_edge.node = dst;
-                    if (end_edge.time - start_edge.time > 0 & end_edge.time - start_edge.time < window_bracket) {
-                        if (start_edge.node != end_edge.node) {
+                for (possible_end_time_set_it = possible_end_time_set.begin();
+                     possible_end_time_set_it != possible_end_time_set.end(); ++possible_end_time_set_it) {
+                    end_time = possible_end_time_set_it->second;
+                    end_neighbour = possible_end_time_set_it->first;
+                    if (end_time - timestamp > 0 & end_time - timestamp < window_bracket) {
+                        if (dst != end_neighbour) {
                             result << src << ",";
-                            result << start_edge.time << ",";//start of cycle
-                            result << start_edge.node; //end of cycle
+                            result << timestamp << ",";//start of cycle
+                            result << dst; //end of cycle
 
                             result << "\n";
                             //create candidates for cycles
-
-                            if (root_candidate_exact.count(src) > 0) {
-                                if (root_candidate_exact[src].count(start_edge) > 0) {
-
-                                    int max_end_time = root_candidate_exact[src][start_edge].first;
-                                    if (max_end_time < end_edge.time) {
-                                        root_candidate_exact[src][start_edge] = make_pair(end_edge.time,
-                                                                                          completeSummary[start_edge.node]);
-                                    }
-
-                                } else {
-                                    root_candidate_exact[src][start_edge] = make_pair(end_edge.time,
-                                                                                      completeSummary[start_edge.node]);
-                                }
-                            } else {
-                                root_candidate_exact[src][start_edge] = make_pair(end_edge.time,
-                                                                                  completeSummary[start_edge.node]);
-                            }
-
+                            cycle_time ct;
+                            ct.start_time = timestamp;
+                            ct.end_time = end_time;
+                            root_candidate_exact[src][ct][dst] = completeSummary[dst];
                         }
                     }
                 }
@@ -665,18 +650,26 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
     }
     result.close();
 
-    std::cout << "finished parsing all " << timer.LiveElapsedSeconds() << std::endl;
+    std::cout << "Time to find seeds: " << timer.LiveElapsedSeconds() << std::endl;
     std::cout << "#root founds: " << root_candidate_exact.size() << std::endl;
-    // print(root_candidate_exact);
+    std::cout << "Memory after 2nd phase: " << getMem() << std::endl;
+    completeSummary.clear();
+    node_update_time.clear();
+    std::cout << "Memory after 2nd phase clear: " << getMem() << std::endl;
     std::cout << "*********Start compressing***********" << std::endl;
     ptime = timer.LiveElapsedSeconds();
     set<exactCandidates> final_roots = compressRootCandidates(&root_candidate_exact, window_bracket);
-    std::cout << "Time to Compress: " << timer.LiveElapsedSeconds() - ptime << " #roots found: "
+    std::cout << "Time to Compress : " << timer.LiveElapsedSeconds() - ptime << " #roots found: "
               << final_roots.size() << std::endl;
     timer.Stop();
+    std::cout << "Memory after compress: " << getMem() << std::endl;
+    root_candidate_exact.clear();
+
+    std::cout << "Memory after compress clear: " << getMem() << std::endl;
+    return final_roots;
     //print(final_roots);
 
-    return final_roots;
+
 }
 
 set<approxCandidates>
@@ -732,6 +725,59 @@ compressRootCandidates(map<int, map<cycle_time, map<int, bloom_filter>>> *root_c
 
     return result;
 }
+set<exactCandidates>
+compressRootCandidates(map<int, map<cycle_time, map<int, set<int>>>> *root_candidates,
+                       int window_bracket) {
+    set<exactCandidates> result;
+    int root_node, max_end_time;
+    int count = 0;
+    map<int, map<cycle_time, map<int, set<int>>>> &root_candidates_approx = *root_candidates;
+
+    for (map<int, map<cycle_time, map<int, set<int>>>>::iterator it_root = root_candidates_approx.begin();
+         it_root != root_candidates_approx.end(); ++it_root) {
+        root_node = it_root->first;
+        exactCandidates *ac;
+        for (map<cycle_time, map<int, set<int>>>::iterator it_inner = it_root->second.begin();
+             it_inner != it_root->second.end(); ++it_inner) {
+            if (count == 0) {
+                //create new candidates
+                ac = new exactCandidates();
+                max_end_time = it_inner->first.start_time + window_bracket;
+                //update candidates
+                ac->root_node = root_node;
+                ac->end_time = it_inner->first.end_time;
+                mergeSummaries(&(it_inner->second), ac, it_inner->first.start_time);
+
+            } else {
+                if (it_inner->first.end_time < max_end_time) {
+                    //update candidates
+                    if (it_inner->first.end_time > ac->end_time) {
+                        ac->end_time = it_inner->first.end_time;
+                    }
+                    mergeSummaries(&(it_inner->second), ac, it_inner->first.start_time);
+                } else {
+                    //add the old candidate in result
+                    result.insert(*ac);
+                    //create new candidates
+                    ac = new exactCandidates();
+                    max_end_time = it_inner->first.start_time + window_bracket;
+                    //update candidates
+                    ac->end_time = it_inner->first.end_time;
+                    ac->root_node = root_node;
+                    mergeSummaries(&(it_inner->second), ac, it_inner->first.start_time);
+
+                }
+            }
+            count++;
+        }
+        if (count > 0) {
+            result.insert(*ac);
+            count = 0;
+        }
+    }
+
+    return result;
+}
 
 void mergeSummaries(map<int, bloom_filter> *summary, approxCandidates *ac, int start_time) {
     bool first_neighbour = true;
@@ -750,75 +796,22 @@ void mergeSummaries(map<int, bloom_filter> *summary, approxCandidates *ac, int s
         }
     }
 }
-
-set<exactCandidates>
-compressRootCandidates(map<int, map<edge, pair<int, set<int>>>> *root_candidates,
-                       int window_bracket) {
-    set<exactCandidates> result;
-    int root_node, max_end_time, end_time;
-    int count = 0;
-    map<int, map<edge, pair<int, set<int>>>> &root_candidates_exact = *root_candidates;
-    exactCandidates *ac;
-    int current_neighbour;
-    for (map<int, map<edge, pair<int, set<int>>>>::iterator it_root = root_candidates_exact.begin();
-         it_root != root_candidates_exact.end(); ++it_root) {
-        root_node = it_root->first;
-
-
-        for (map<edge, pair<int, set<int>>>::iterator it_inner = it_root->second.begin();
-             it_inner != it_root->second.end(); ++it_inner) {
-            end_time = it_inner->second.first;
-            edge start_edge = it_inner->first;
-            if (count == 0) {
-                //create new candidates
-                ac = new exactCandidates();
-                ac->root_node = root_node;
-
-                current_neighbour = start_edge.node;
-                max_end_time = start_edge.time + window_bracket;
-                //update candidates
-                ac->root_node = root_node;
-                ac->end_time = it_inner->second.first;
-                ac->neighbours_time.insert(start_edge);
-                ac->candidates_nodes = it_inner->second.second;
-                //   mergeSummaries(&(it_inner->second.second), ac, start_edge.time);
-
-            } else {
-
-                if (start_edge.node == current_neighbour & end_time < max_end_time) {
-                    //add in existing candidate
-                    ac->neighbours_time.insert(start_edge);
-                    ac->candidates_nodes.insert(it_inner->second.second.begin(), it_inner->second.second.end());
-                    if (ac->end_time < end_time) {
-                        ac->end_time = end_time;
-                    }
-
-                } else {
-                    //add the old candidate in result
-                    result.insert(*ac);
-                    //create new candidates
-                    ac = new exactCandidates();
-                    ac->root_node = root_node;
-
-                    current_neighbour = start_edge.node;
-                    max_end_time = start_edge.time + window_bracket;
-                    //update candidates
-                    ac->root_node = root_node;
-                    ac->end_time = it_inner->second.first;
-                    ac->neighbours_time.insert(start_edge);
-                    ac->candidates_nodes = it_inner->second.second;
-
-                }
-            }
-            count++;
-        }
-        if (count > 0) {
-            result.insert(*ac);
-            count = 0;
+void mergeSummaries(map<int, set<int>> *summary, exactCandidates *ac, int start_time) {
+    bool first_neighbour = true;
+    if (ac->neighbours_time.size() > 0) {
+        first_neighbour = false;
+    }
+    map<int, set<int>> &set_summary = *summary;
+    for (map<int, set<int>>::iterator it_neighbours = set_summary.begin();
+         it_neighbours != set_summary.end(); ++it_neighbours) {
+        ac->neighbours_time.insert(make_pair(it_neighbours->first, start_time));
+        if (first_neighbour) {
+            ac->candidates_nodes = it_neighbours->second;
+            first_neighbour = false;
+        } else {
+            ac->candidates_nodes.insert(it_neighbours->second.begin(),it_neighbours->second.end());
         }
     }
-
-    return result;
 }
 
 
@@ -872,14 +865,14 @@ updateSummary(int src, int dst, int timestamp, int window_bracket, map<int, bloo
     return result;
 }
 
-pair<int, edge>
+pair<int,pair<int, int>>
 updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int, set<int>> *summary,
                    map<int, int> *update_time) {
     map<int, set<int>>::iterator src_iterator;
     map<int, set<int>>::iterator dst_iterator;
     map<int, set<int>> &completeSummary = *summary;
     map<int, int> &node_update_time = *update_time;
-    pair<int, edge> result;
+    pair<int, pair<int, int>> result;
 
     if (src == dst) {
         //self loop ignored
@@ -887,7 +880,6 @@ updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int,
 
         if (completeSummary.count(src) == 0) {
             //Instantiate Bloom Filter
-
             set<int> filter;
             filter.insert(dst);
             completeSummary[src] = filter;
@@ -906,18 +898,15 @@ updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int,
             if (abs(node_update_time[dst] - timestamp) > window_bracket) {
                 dst_iterator->second.clear();
             } else {
-                if (dst_iterator->second.count(src) > 0) {
+                if (dst_iterator->second.count(src)>0) {
 
                     if (dst_iterator->second.size() > 1) {
-                        edge temp_edge;
-                        temp_edge.time = timestamp;
-                        temp_edge.node = dst;
-                        result = make_pair(src, temp_edge);
+                        result = make_pair(src, make_pair(dst, timestamp));
 
                     }
 
                 }
-                src_summary.insert(dst_iterator->second.begin(), dst_iterator->second.end());
+                src_summary.insert(dst_iterator->second.begin(),dst_iterator->second.end());
 
             }
         }

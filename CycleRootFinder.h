@@ -86,20 +86,19 @@ updateSummary(int src, int dst, int timestamp, int window_bracket, map<int, bloo
               bloom_parameters parameters, map<int, int> *update_time);
 
 void mergeSummaries(map<int, bloom_filter> *summary, approxCandidates *ac, int start_time);
-
+void mergeSummaries(map<int, set<int>> *summary, exactCandidates *ac, int start_time);
 set<approxCandidates>
 compressRootCandidates(map<int, map<cycle_time, map<int, bloom_filter>>> *root_candidates,
                        int window_bracket);
 
-
-pair<int, edge>
+pair<int,pair<int, int>>
 updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int, set<int>> *summary,
                    map<int, int> *update_time);
 
 
-
 set<exactCandidates>
-compressRootCandidates(map<int, map<edge, pair<int, set<int>>>> *root_candidates, int window_bracket);
+compressRootCandidates(map<int, map<cycle_time, map<int, set<int>>>> *root_candidates,
+                       int window_bracket);
 set<exactCandidates>
 findRootNodesExactBothDirection(std::string input, std::string output, int window, int cleanUpLimit,
                                 bool reverseEdge);

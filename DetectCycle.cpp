@@ -556,6 +556,7 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidates> *root_can
     bloom_filter candidateset;
     for (root_candidate_approx_itr = root_candidate_approx.begin();
          root_candidate_approx_itr != root_candidate_approx.end(); ++root_candidate_approx_itr) {
+
         DynamicDFSApprox(*root_candidate_approx_itr, window_bracket);
         count++;
         if (count % 1000 == 0) {
@@ -1418,15 +1419,15 @@ void DynamicDFSExact(exactCandidates candidate, int window_bracket, bool use_bun
         std::set<int> tempcandidate;
         map<int, edgeBundle> V;
         for (auto z:candidate.neighbours_time) {
-            if (V.count(z.node) > 0) {
-                V[z.node].time.times.insert(z.time);
+            if (V.count(z.first) > 0) {
+                V[z.first].time.times.insert(z.second);
             } else {
 
                 edgeBundle eb;
                 eb.from_node = root_node;
-                eb.to_node = z.node;
-                eb.time.times.insert(z.node);
-                V[z.node] = eb;
+                eb.to_node = z.first;
+                eb.time.times.insert(z.first);
+                V[z.first] = eb;
 
             }
 
@@ -1451,8 +1452,8 @@ void DynamicDFSExact(exactCandidates candidate, int window_bracket, bool use_bun
             ct.clear();
             U.clear();
             vector<std::string> path_till_here;
-            path_till_here.push_back(to_string(root_node) + "," + to_string(x.node) + "," + to_string(x.time));
-            allPathExact(x.node, root_node, x.time, candidate.end_time, path_till_here, candidate.candidates_nodes);
+            path_till_here.push_back(to_string(root_node) + "," + to_string(x.first) + "," + to_string(x.second));
+            allPathExact(x.first, root_node, x.second, candidate.end_time, path_till_here, candidate.candidates_nodes);
         }
     }
 

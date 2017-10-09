@@ -233,7 +233,7 @@ struct edge {
     }
 };
 struct exactCandidates {
-    std::set<edge> neighbours_time; //set of nodeid,start_time
+    std::set<pair<int, int>> neighbours_time; //set of nodeid,start_time
     int root_node;
 
     int end_time;
