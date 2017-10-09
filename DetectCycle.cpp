@@ -433,12 +433,15 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
                                 for (auto x:currentBundle.path[cycle_length - 1].time.times) {
                                     lastBundle.path[cycle_length - 1].time.times.insert(x);
                                 }
+                                for (auto x:currentBundle.path[0].time.times) {
+                                    lastBundle.path[0].time.times.insert(x);
+                                }
 
                             }
 
 
                         } else {
-                            lastBundle = currentBundle;
+                           lastBundle = currentBundle;
                             cycle_count = pathCount(currentBundle);
                             if (cycle_length == 3) {
                                 cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
@@ -447,7 +450,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
                             all_cycle[cycle_length] += cycle_count;
                         }
                     }
-                    count++;
+                   count++;
 
                 }
             }
@@ -456,14 +459,14 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
         for (int i = 1; i <= maxCycleLenght; i++) {
             cout << i << "," << all_cycle[i] << endl;
         }
-        /*
+
         cout << "printing count for length 3" << endl;
         for (map<int, int>::iterator it = cycle_3_count.begin(); it != cycle_3_count.end(); it++) {
             if (it->second != 0) {
                 cout << it->first << "," << it->second << endl;
             }
         }
-         */
+
 
     } else {
         int cycleLengthArray[50] = {0};

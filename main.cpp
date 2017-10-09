@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 
             findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
                          candidates_provided, use_bundle.getValue());
-            std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() - pend << std::endl;
+            std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() << std::endl;
         } else if (rootAlgo == 4) {
             // find root node using new method
             findRootNodesNew(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
@@ -172,17 +172,16 @@ int main(int argc, char **argv) {
 
         } else if (rootAlgo == 9) {
 
-            std::string cycleFile = resultFile;
-            cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");
-            //findRootNodesNew(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
-            std::cout << "Finding cycles using bundle approach : input: " << inputGraph << " result: "
-                      << cycleFile << std::endl;
-            findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
-                         candidates_provided, use_bundle.getValue());
-            std::cout << "Found all cycles nodes using bundle and time " << timer.LiveElapsedSeconds() - pend
-                      << std::endl;
+            findRootNodesNew(inputGraph, resultFile, window, cleanUpLimit, reverseEdge);
+
+            pend = timer.LiveElapsedSeconds();
+            std::cout << "Time to find seeds: " << pend << std::endl;
+            string compress_seeds=combineSeeds(resultFile,window);
+            std::cout << "Time to find compress: " <<timer.LiveElapsedSeconds()- pend << std::endl;
+
         }else if (rootAlgo == 10) {
-            testCountPath();
+            //testCountPath();
+            combineSeeds(resultFile,window);
         }
         else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
@@ -190,6 +189,7 @@ int main(int argc, char **argv) {
 
         std::cout << "Memory end, " << getMem() << std::endl;
         std::cout << "Total Time, " << timer.LiveElapsedSeconds() << std::endl;
+
     } catch (TCLAP::ArgException &e)  // catch any exceptions
     { std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; }
     catch (std::exception &e) {

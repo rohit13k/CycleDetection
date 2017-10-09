@@ -187,7 +187,29 @@ struct pathBundle{
 };
 
 
-
+struct seed{
+    int start_time;
+    int end_time;
+    set<int> candidates;
+    bool operator<(const seed &rhs) const {
+        if(start_time==rhs.start_time){
+            if(end_time==rhs.end_time){
+                return candidates<rhs.candidates;
+            }else{
+                return end_time<rhs.end_time;
+            }
+        }else{
+            return start_time<rhs.start_time;
+        }
+    }
+    string pringString(){
+        string result=to_string(start_time)+","+to_string(end_time);
+        for(auto x:candidates){
+            result=result+","+to_string(x);
+        }
+        return result;
+    }
+};
 struct edge {
     int node;
     int time;

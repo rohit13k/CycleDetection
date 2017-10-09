@@ -612,7 +612,7 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
 
                 for (set<edge>::iterator it = possible_end_time_set.begin();
                      it != possible_end_time_set.end(); ++it) {
-                    edge end_edge=*it;
+                    edge end_edge = *it;
 
                     edge start_edge;
                     start_edge.time = timestamp;
@@ -631,14 +631,17 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
 
                                     int max_end_time = root_candidate_exact[src][start_edge].first;
                                     if (max_end_time < end_edge.time) {
-                                        root_candidate_exact[src][start_edge]=make_pair(end_edge.time,completeSummary[start_edge.node]);
+                                        root_candidate_exact[src][start_edge] = make_pair(end_edge.time,
+                                                                                          completeSummary[start_edge.node]);
                                     }
 
                                 } else {
-                                    root_candidate_exact[src][start_edge]= make_pair(end_edge.time,completeSummary[start_edge.node]);
+                                    root_candidate_exact[src][start_edge] = make_pair(end_edge.time,
+                                                                                      completeSummary[start_edge.node]);
                                 }
                             } else {
-                                root_candidate_exact[src][start_edge]= make_pair(end_edge.time,completeSummary[start_edge.node]);
+                                root_candidate_exact[src][start_edge] = make_pair(end_edge.time,
+                                                                                  completeSummary[start_edge.node]);
                             }
 
                         }
@@ -752,7 +755,7 @@ set<exactCandidates>
 compressRootCandidates(map<int, map<edge, pair<int, set<int>>>> *root_candidates,
                        int window_bracket) {
     set<exactCandidates> result;
-    int root_node, max_end_time,end_time;
+    int root_node, max_end_time, end_time;
     int count = 0;
     map<int, map<edge, pair<int, set<int>>>> &root_candidates_exact = *root_candidates;
     exactCandidates *ac;
@@ -764,30 +767,30 @@ compressRootCandidates(map<int, map<edge, pair<int, set<int>>>> *root_candidates
 
         for (map<edge, pair<int, set<int>>>::iterator it_inner = it_root->second.begin();
              it_inner != it_root->second.end(); ++it_inner) {
-            end_time=it_inner->second.first;
-            edge start_edge=it_inner->first;
+            end_time = it_inner->second.first;
+            edge start_edge = it_inner->first;
             if (count == 0) {
                 //create new candidates
                 ac = new exactCandidates();
-                ac->root_node=root_node;
+                ac->root_node = root_node;
 
-                current_neighbour=start_edge.node;
+                current_neighbour = start_edge.node;
                 max_end_time = start_edge.time + window_bracket;
                 //update candidates
                 ac->root_node = root_node;
                 ac->end_time = it_inner->second.first;
                 ac->neighbours_time.insert(start_edge);
-                ac->candidates_nodes=it_inner->second.second;
-             //   mergeSummaries(&(it_inner->second.second), ac, start_edge.time);
+                ac->candidates_nodes = it_inner->second.second;
+                //   mergeSummaries(&(it_inner->second.second), ac, start_edge.time);
 
             } else {
 
-                if (start_edge.node ==current_neighbour&end_time<max_end_time) {
-                        //add in existing candidate
+                if (start_edge.node == current_neighbour & end_time < max_end_time) {
+                    //add in existing candidate
                     ac->neighbours_time.insert(start_edge);
-                    ac->candidates_nodes.insert(it_inner->second.second.begin(),it_inner->second.second.end());
-                    if(ac->end_time<end_time){
-                        ac->end_time=end_time;
+                    ac->candidates_nodes.insert(it_inner->second.second.begin(), it_inner->second.second.end());
+                    if (ac->end_time < end_time) {
+                        ac->end_time = end_time;
                     }
 
                 } else {
@@ -795,15 +798,15 @@ compressRootCandidates(map<int, map<edge, pair<int, set<int>>>> *root_candidates
                     result.insert(*ac);
                     //create new candidates
                     ac = new exactCandidates();
-                    ac->root_node=root_node;
+                    ac->root_node = root_node;
 
-                    current_neighbour=start_edge.node;
+                    current_neighbour = start_edge.node;
                     max_end_time = start_edge.time + window_bracket;
                     //update candidates
                     ac->root_node = root_node;
                     ac->end_time = it_inner->second.first;
                     ac->neighbours_time.insert(start_edge);
-                    ac->candidates_nodes=it_inner->second.second;
+                    ac->candidates_nodes = it_inner->second.second;
 
                 }
             }
@@ -817,7 +820,6 @@ compressRootCandidates(map<int, map<edge, pair<int, set<int>>>> *root_candidates
 
     return result;
 }
-
 
 
 pair<int, pair<int, int>>
@@ -908,8 +910,8 @@ updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int,
 
                     if (dst_iterator->second.size() > 1) {
                         edge temp_edge;
-                        temp_edge.time=timestamp;
-                        temp_edge.node=dst;
+                        temp_edge.time = timestamp;
+                        temp_edge.node = dst;
                         result = make_pair(src, temp_edge);
 
                     }
@@ -1065,7 +1067,7 @@ int findCandidateFromApprox(std::string input, string root, std::string output, 
 
 string combineSeeds(std::string root_file, int window) {
     string output_file = root_file;
-    output_file.replace(output_file.end() - 3, output_file.end(), "cmp");
+    output_file.replace(output_file.end() - 4, output_file.end(), "-compressed.csv");
     ofstream result;
     result.open(output_file.c_str());
     int window_bracket = window * 60 * 60;
@@ -1074,15 +1076,53 @@ string combineSeeds(std::string root_file, int window) {
     std::vector<std::string> templine;
     int root_node, t_s, t_e;
     set<int> candidates;
-    map<int,map<int,pair<int,set<int>>>> all_seeds;
+    map<int, vector<seed>> all_seeds;
 
     while (root_file_data >> line) {
         templine = Tools::Split(line, ',');
-        root_node=stoi(templine[0]);
-        t_s=stoi(templine[1]);
-        t_e=stoi(templine[2]);
-
+        root_node = stoi(templine[0]);
+        t_s = stoi(templine[1]);
+        t_e = stoi(templine[2]);
+        candidates.clear();
+        for (int i = 3; i < templine.size(); i++) {
+            candidates.insert(stoi(templine[i]));
+        }
+        seed s;
+        s.start_time = t_s;
+        s.end_time = t_e;
+        s.candidates = candidates;
+        all_seeds[root_node].push_back(s);
     }
 
+    int max_end_time, current_start_time, current_end_time;
+    for (map<int, vector<seed>>::iterator seed_itr = all_seeds.begin();
+         seed_itr != all_seeds.end(); seed_itr++) {
+        root_node = seed_itr->first;
+        sort(seed_itr->second.begin(),seed_itr->second.end());
+        seed current_seed=seed_itr->second[0];
+        current_start_time=current_seed.start_time;
+        current_end_time=current_seed.end_time;
+        max_end_time=current_start_time+window_bracket;
+        for(int i=1;i<seed_itr->second.size();i++){
+            current_end_time=seed_itr->second[i].end_time;
+            if(current_end_time<max_end_time){
+                if(current_seed.end_time<current_end_time){
+                   current_seed.end_time=current_end_time;
+                }
+                current_seed.candidates.insert(seed_itr->second[i].candidates.begin(),seed_itr->second[i].candidates.end());
+            }else{
+                result<<root_node<<","<<current_seed.pringString()<<endl;
+                current_seed=seed_itr->second[i];
+                current_start_time=current_seed.start_time;
+                current_end_time=current_seed.end_time;
+                max_end_time=current_start_time+window_bracket;
+            }
+
+        }
+        result<<root_node<<","<<current_seed.pringString()<<endl;
+    }
+    result.close();
+
+    return output_file;
 }
 
