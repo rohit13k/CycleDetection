@@ -134,17 +134,17 @@ int main(int argc, char **argv) {
             std::cout << "Finding root nodes using bidirectional bloom: input: " << inputGraph << " result: "
                       << root_file << std::endl;
 
-            set<approxCandidates> root_candidates = findRootNodesApproxBothDirection(inputGraph, root_file, window,
-                                                                                     cleanUpLimit, reverseEdge);
-
+         //   set<approxCandidates> root_candidates = findRootNodesApproxBothDirection(inputGraph, root_file, window,
+         //                                                                            cleanUpLimit, reverseEdge);
+            set<approxCandidatesNew> root_candidates = findRootNodesApproxBothDirectionNew(inputGraph, root_file, window,
+                                                                                                cleanUpLimit, reverseEdge);
             pend = timer.LiveElapsedSeconds();
             std::cout << "Time to find all root candidates: " << pend << std::endl;
             std::cout << "Memory: " << getMem() << std::endl;
             std::cout << "Finding cycles using  bloom: input: " << inputGraph << " result: " << resultFile << std::endl;
 
-            findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile,
-                                   window, reverseEdge);
-
+           // findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile, window, reverseEdge,use_bundle.getValue());
+            findAllCycleUsingBloomNew(inputGraph, &root_candidates, resultFile, window, reverseEdge,true);
             std::cout << "Time to find cycle using bloom: " << timer.LiveElapsedSeconds() - pend << std::endl;
 
         } else if (rootAlgo == 8) {

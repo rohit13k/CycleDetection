@@ -95,7 +95,9 @@ pair<int,pair<int, int>>
 updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int, set<int>> *summary,
                    map<int, int> *update_time);
 
-
+set<approxCandidatesNew>
+findRootNodesApproxBothDirectionNew(std::string input, std::string output, int window, int cleanUpLimit,
+                                    bool reverseEdge);
 set<exactCandidates>
 compressRootCandidates(map<int, map<cycle_time, map<int, set<int>>>> *root_candidates,
                        int window_bracket);
@@ -106,4 +108,9 @@ void print(map<int, map<cycle_time, map<int, set<int>>>> root_candidate_exact);
 void print(set<exactCandidates> final_roots);
 int cleanup(map<int, set<int>> *completeSummary, map<int, int> *node_update_time, int timestamp, int window_bracket);
 string combineSeeds(std::string root_file, int window);
+
+set<approxCandidatesNew>
+compressRootCandidatesNew(map<int, map<cycle_time, map<int, bloom_filter>>> *root_candidates,
+                          int window_bracket);
+
 #endif //CYCLEDETECTION_CYCLEROOTFINDER_H
