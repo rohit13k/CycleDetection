@@ -552,8 +552,8 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
     int window_bracket = window * 60 * 60;
     double ptime = 0.0;
 
-    ofstream result;
-    result.open(output.c_str());
+   // ofstream result;
+   // result.open(output.c_str());
 
     vector<string> all_data;
     while (infile >> line) {
@@ -574,7 +574,7 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
             endNode en;
             en.node_id=root_neigbhour_time.second.first;
             en.end_time=root_neigbhour_time.second.second;
-            en.candidates=completeSummary[src];
+            en.candidates=completeSummary[dst];
             rootnode_end_time_set[root_neigbhour_time.first].insert(en);
         }
         count++;
@@ -628,15 +628,16 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
                      possible_end_time_set_it != possible_end_time_set.end(); ++possible_end_time_set_it) {
                     end_time = possible_end_time_set_it->end_time;
                     end_neighbour = possible_end_time_set_it->node_id;
-                    old_bloom=possible_end_time_set_it->candidates;
-                    old_bloom&=completeSummary[dst];
+
                     if (end_time - timestamp > 0 & end_time - timestamp < window_bracket) {
                         if (dst != end_neighbour) {
-                            result << src << ",";
-                            result << timestamp << ",";//start of cycle
-                            result << dst; //end of cycle
+                        //    result << src << ",";
+                        //    result << timestamp << ",";//start of cycle
+                        //    result << dst; //end of cycle
 
-                            result << "\n";
+                        //    result << "\n";
+                            old_bloom=possible_end_time_set_it->candidates;
+                            old_bloom&=completeSummary[dst];
                             //create candidates for cycles
                             if(root_candidate_approx.count(src)>0){
 
@@ -697,7 +698,7 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
             std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
         }
     }
-    result.close();
+    //result.close();
 
     std::cout << "Time to find seeds: " << timer.LiveElapsedSeconds() << std::endl;
     std::cout << "#root founds: " << root_candidate_approx.size() << std::endl;

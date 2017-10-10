@@ -385,13 +385,13 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     }
     int root_node;
     if (use_bundle) {
-        map<int, int> cycle_3_count;
+      //  map<int, int> cycle_3_count;
         int cycle_length, cycle_count;
         int maxCycleLenght = 0;
         for (map<int, map<int, vector<pathBundle>>>::iterator paths_itr = resultAllPathBundle.begin();
              paths_itr != resultAllPathBundle.end(); paths_itr++) {
             root_node = paths_itr->first;
-            cycle_3_count[root_node] = 0;
+         //   cycle_3_count[root_node] = 0;
             for (map<int, vector<pathBundle>>::iterator it_inner = paths_itr->second.begin();
                  it_inner != paths_itr->second.end(); it_inner++) {
                 cycle_length = it_inner->first;
@@ -407,9 +407,9 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
                     if (count == 0) {
                         lastBundle = currentBundle;
                         cycle_count = pathCount(currentBundle);
-                        if (cycle_length == 3) {
-                            cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                        }
+                      //  if (cycle_length == 3) {
+                     //       cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                     //   }
                         cycleResult << currentBundle.printPath() << "\n";
 
                         all_cycle[cycle_length] += cycle_count;
@@ -423,9 +423,9 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
                             }
                             if (currentBundle.path[cycle_length - 1].time.size() > 0) {
                                 cycle_count = pathCount(currentBundle);
-                                if (cycle_length == 3) {
-                                    cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                                }
+                          //      if (cycle_length == 3) {
+                          //          cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                         //       }
                                 cycleResult << currentBundle.printPath() << "\n";
                                 all_cycle[cycle_length] += cycle_count;
 
@@ -443,9 +443,9 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
                         } else {
                             lastBundle = currentBundle;
                             cycle_count = pathCount(currentBundle);
-                            if (cycle_length == 3) {
-                                cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                            }
+                         //   if (cycle_length == 3) {
+                          //      cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                          //  }
                             cycleResult << currentBundle.printPath() << "\n";
                             all_cycle[cycle_length] += cycle_count;
                         }
@@ -460,14 +460,14 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
             cout << i << "," << all_cycle[i] << endl;
         }
 
-
+/*
         cout << "printing count for length 3" << endl;
         for (map<int, int>::iterator it = cycle_3_count.begin(); it != cycle_3_count.end(); it++) {
             if (it->second != 0) {
                 cout << it->first << "," << it->second << endl;
             }
         }
-
+*/
 
     } else {
         int cycleLengthArray[50] = {0};
@@ -568,16 +568,16 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
         }
     }
     cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, " << resultAllPath.size()
-         << endl;
+            << ",max E: "<<max_E_count<< endl;
     int root_node;
     if (use_bundle) {
-        map<int, int> cycle_3_count;
+      //  map<int, int> cycle_3_count;
         int cycle_length, cycle_count;
         int maxCycleLenght = 0;
         for (map<int, map<int, vector<pathBundle>>>::iterator paths_itr = resultAllPathBundle.begin();
              paths_itr != resultAllPathBundle.end(); paths_itr++) {
             root_node = paths_itr->first;
-            cycle_3_count[root_node] = 0;
+          //  cycle_3_count[root_node] = 0;
             for (map<int, vector<pathBundle>>::iterator it_inner = paths_itr->second.begin();
                  it_inner != paths_itr->second.end(); it_inner++) {
                 cycle_length = it_inner->first;
@@ -593,9 +593,9 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
                     if (count == 0) {
                         lastBundle = currentBundle;
                         cycle_count = pathCount(currentBundle);
-                        if (cycle_length == 3) {
-                            cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                        }
+                      //  if (cycle_length == 3) {
+                      //      cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                      //  }
                         cycleResult << currentBundle.printPath() << "\n";
 
                         all_cycle[cycle_length] += cycle_count;
@@ -609,9 +609,9 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
                             }
                             if (currentBundle.path[cycle_length - 1].time.size() > 0) {
                                 cycle_count = pathCount(currentBundle);
-                                if (cycle_length == 3) {
-                                    cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                                }
+                         //       if (cycle_length == 3) {
+                         //           cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                         //       }
                                 cycleResult << currentBundle.printPath() << "\n";
                                 all_cycle[cycle_length] += cycle_count;
 
@@ -629,9 +629,9 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
                         } else {
                             lastBundle = currentBundle;
                             cycle_count = pathCount(currentBundle);
-                            if (cycle_length == 3) {
-                                cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                            }
+                          //  if (cycle_length == 3) {
+                          //      cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                          //  }
                             cycleResult << currentBundle.printPath() << "\n";
                             all_cycle[cycle_length] += cycle_count;
                         }
@@ -1080,7 +1080,7 @@ allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidate
     set<pedge> E = getFilteredData(v_current, t_current + 1, t_e, &candidates);
 
     for (auto x: E) {
-        V.insert(x.toVertex);
+
         if (ct.count(x.toVertex) == 0) {// if seen for the first time initialize close time and dependent list
             ct[x.toVertex] = std::numeric_limits<int>::max();
             set<pair<nodeid, int>> temp;
@@ -1208,7 +1208,7 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
     set<pedge> E = getFilteredData(v_current, t_current + 1, t_e, &candidates);
 
     for (auto x: E) {
-        V.insert(x.toVertex);
+
         if (ct.count(x.toVertex) == 0) {// if seen for the first time initialize close time and dependent list
             ct[x.toVertex] = std::numeric_limits<int>::max();
             set<pair<nodeid, int>> temp;
