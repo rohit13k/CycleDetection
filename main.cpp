@@ -142,9 +142,10 @@ int main(int argc, char **argv) {
             std::cout << "Time to find all root candidates: " << pend << std::endl;
             std::cout << "Memory: " << getMem() << std::endl;
             std::cout << "Finding cycles using  bloom: input: " << inputGraph << " result: " << resultFile << std::endl;
-
+            std::string cycleFile = resultFile;
+            cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");
            // findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile, window, reverseEdge,use_bundle.getValue());
-            findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile, window, reverseEdge,true);
+            findAllCycleUsingBloom(inputGraph, &root_candidates, cycleFile, window, reverseEdge,true);
             std::cout << "Time to find cycle using bloom: " << timer.LiveElapsedSeconds() - pend << std::endl;
 
         } else if (rootAlgo == 8) {

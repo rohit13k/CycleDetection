@@ -349,9 +349,10 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
         for (i = 3; i < templine.size(); i++) {
             candidateset.insert(stoi(templine[i]));
         }
-        candidateset.insert(rootnode);
+        candidateset.erase(rootnode);
         // findCycle(rootnode, t_s, &candidateset, window_bracket);
-        if (candidateset.size() > 10) {
+        if (candidateset.size() > 1) {
+            candidateset.insert(rootnode);
             //run only for cycle with lenght greater than 2
             // monitor.Start();
             //  monitorTime = time(&now);
