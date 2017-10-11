@@ -192,16 +192,14 @@ int main(int argc, char **argv) {
 test.clear();
             cout<<"Memory after:"<<getMem()<<endl;
 
-            map<int,string> *test2=new map<int,string>();
+            map<int,nodeid > test2;
 
             for(int i=0;i<(100*cleanUpLimit);i++){
 
-                (*test2)[i]="asdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasd";
+                test2[i]=1000;
             }
             cout<<"Memory before:"<<getMem()<<endl;
-            test2->clear();
-            delete test2;
-
+          test2.clear();
             cout<<"Memory after:"<<getMem()<<endl;
         }
         else {
