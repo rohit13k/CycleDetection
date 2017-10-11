@@ -10,6 +10,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <string.h>
 #include "FileIndexer.h"
 #include "double_llist.h"
 
@@ -342,6 +343,16 @@ struct endNode {
     }
 
 };
+struct monitor{
+    int cycles[50]={0};
+    int edge_count=0;
+    int candidate_count=0;
+    void clear(){
+        memset(cycles, 0, sizeof(cycles));
+        edge_count=0;
+        candidate_count=0;
+    }
+};
 
 int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string output, int window,
                  bool isCompressed, bool reverseEdge, bool candidates_provided, bool use_bundle);
@@ -360,12 +371,12 @@ int findRootNodes(std::string input, std::string output, int window, int cleanUp
 set<int> getAllTime(std::set<pedge> E, nodeid dst);
 
 bool allPath(nodeid w, nodeid rootnode, int t_s, int t_e, std::vector<std::string> path_till_here,
-             std::set<nodeid> candidates, vector<int> *cycleLengthArray);
+             std::set<nodeid> candidates, vector<int> *cycleLengthArray,monitor *m);
 
 bool allPathWithoutCandidate(nodeid w, nodeid rootnode, int t_s, int t_e, std::vector<std::string> path_till_here,
                              std::set<nodeid> seen_node, vector<int> *cycleLengthArray);
 
-void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, int window_bracket,
+string DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, int window_bracket,
                 bool isCompressed, bool candidates_provided, bool use_bundle, vector<int> *cycleLengthArray);
 
 void findAllCycleNaive(std::string inputGraph, std::string resultFile, int window, bool reverseEdge);
@@ -392,7 +403,7 @@ bool allPathExact(int w, int rootnode, int t_s, int t_e, vector<std::string> pat
                   set<int> candidates);
 
 
-int allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidates, vector<int> *cycleLengthArray);
+int allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidates, vector<int> *cycleLengthArray,monitor *m);
 
 int
 allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter candidates, vector<int> *cycleLengthArray);

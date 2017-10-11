@@ -182,7 +182,14 @@ int main(int argc, char **argv) {
 
         }else if (rootAlgo == 10) {
             //testCountPath();
-            combineSeeds(resultFile,window);
+           map<int,bloom_filter> test;
+            for(int i=0;i<cleanUpLimit;i++){
+                bloom_filter b;
+                test[i]=b;
+            }
+            cout<<"Memory:"<<getMem()<<endl;
+            test.clear();
+            cout<<"Memory:"<<getMem()<<endl;
         }
         else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;

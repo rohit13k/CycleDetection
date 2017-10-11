@@ -314,16 +314,24 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
                  bool isCompressed, bool reverseEdge, bool candidates_provided, bool use_bundle) {
     int window_bracket = window * 60 * 60;
     double ptime = 0.0;
-
-    time_t now;
-
+    string monitor_result = dataFile;
+    std::string ext;
+    ext = "-monitor-" + to_string(window);
+    if (use_bundle) {
+        ext = ext + "-bundle";
+    }
+    ext = ext + ".csv";
+    monitor_result.replace(monitor_result.end() - 4, monitor_result.end(), ext);
+    ofstream monitor_writer;
+    monitor_writer.open(monitor_result.c_str());
+    monitor_writer<<"root,neigbhour,candidate_count,edge_count,time,cycles\n";
     ofstream cycleResult;
     cycleResult.open(output.c_str());
     string line;
+    string monitor_text;
     Platform::Timer timer;
-    Platform::Timer monitor;
-    double monitorTime = 0.0;
-    max_E_count=0;
+
+    max_E_count = 0;
 
     timer.Start();
     readFile(dataFile, reverseEdge);//creates a data structure of type <srcNode:<time:dstNode>>
@@ -357,9 +365,9 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
             // monitor.Start();
             //  monitorTime = time(&now);
 
-            DynamicDFS(rootnode, t_s, t_end + 1, candidateset, window_bracket, isCompressed,
-                       candidates_provided, use_bundle, &all_cycle);
-
+            monitor_text = DynamicDFS(rootnode, t_s, t_end + 1, candidateset, window_bracket, isCompressed,
+                                      candidates_provided, use_bundle, &all_cycle);
+            monitor_writer << monitor_text;
             /*
             cout << "Monitor Time," << monitor.LiveElapsedSeconds() << ",rootnode, ";
             cout << rootnode << ",start time," << t_s << ",candidate set size,";
@@ -379,20 +387,22 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
             ptime = timer.LiveElapsedSeconds();
 
             std::cout << "finished cycle roots, count," << count << ",time," << parseTime;
-            cout << ",cycle found," << resultAllPath.size()<< ",max E: "<<max_E_count;
+            cout << ",cycle found," << resultAllPath.size() << ",max E: " << max_E_count;
             cout << ",memory," << getMem() << std::endl;
         }
 
     }
+
+    monitor_writer.close();
     int root_node;
     if (use_bundle) {
-      //  map<int, int> cycle_3_count;
+        //  map<int, int> cycle_3_count;
         int cycle_length, cycle_count;
         int maxCycleLenght = 0;
         for (map<int, map<int, vector<pathBundle>>>::iterator paths_itr = resultAllPathBundle.begin();
              paths_itr != resultAllPathBundle.end(); paths_itr++) {
             root_node = paths_itr->first;
-         //   cycle_3_count[root_node] = 0;
+            //   cycle_3_count[root_node] = 0;
             for (map<int, vector<pathBundle>>::iterator it_inner = paths_itr->second.begin();
                  it_inner != paths_itr->second.end(); it_inner++) {
                 cycle_length = it_inner->first;
@@ -408,9 +418,9 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
                     if (count == 0) {
                         lastBundle = currentBundle;
                         cycle_count = pathCount(currentBundle);
-                      //  if (cycle_length == 3) {
-                     //       cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                     //   }
+                        //  if (cycle_length == 3) {
+                        //       cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                        //   }
                         cycleResult << currentBundle.printPath() << "\n";
 
                         all_cycle[cycle_length] += cycle_count;
@@ -424,9 +434,9 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
                             }
                             if (currentBundle.path[cycle_length - 1].time.size() > 0) {
                                 cycle_count = pathCount(currentBundle);
-                          //      if (cycle_length == 3) {
-                          //          cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                         //       }
+                                //      if (cycle_length == 3) {
+                                //          cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                                //       }
                                 cycleResult << currentBundle.printPath() << "\n";
                                 all_cycle[cycle_length] += cycle_count;
 
@@ -444,9 +454,9 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
                         } else {
                             lastBundle = currentBundle;
                             cycle_count = pathCount(currentBundle);
-                         //   if (cycle_length == 3) {
-                          //      cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                          //  }
+                            //   if (cycle_length == 3) {
+                            //      cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                            //  }
                             cycleResult << currentBundle.printPath() << "\n";
                             all_cycle[cycle_length] += cycle_count;
                         }
@@ -533,13 +543,13 @@ bool is_overlapping(pathBundle *pathBundle1, pathBundle *pathBundle2) {
 
 
 int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_candidates, std::string output,
-                              int window, bool reverseEdge, bool use_bundle) {
+                           int window, bool reverseEdge, bool use_bundle) {
     int window_bracket = window * 60 * 60;
     double ptime = 0.0;
     set<approxCandidatesNew> &root_candidate_approx = *root_candidates;
     set<approxCandidatesNew>::iterator root_candidate_approx_itr;
     time_t now;
-    max_E_count=0;
+    max_E_count = 0;
     ofstream cycleResult;
     cycleResult.open(output.c_str());
     string line;
@@ -565,20 +575,20 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
         count++;
         if (count % 1000 == 0) {
             cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, "
-                 << resultAllPath.size() << ",max E: "<<max_E_count<< endl;
+                 << resultAllPath.size() << ",max E: " << max_E_count << endl;
         }
     }
     cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, " << resultAllPath.size()
-            << ",max E: "<<max_E_count<< endl;
+         << ",max E: " << max_E_count << endl;
     int root_node;
     if (use_bundle) {
-      //  map<int, int> cycle_3_count;
+        //  map<int, int> cycle_3_count;
         int cycle_length, cycle_count;
         int maxCycleLenght = 0;
         for (map<int, map<int, vector<pathBundle>>>::iterator paths_itr = resultAllPathBundle.begin();
              paths_itr != resultAllPathBundle.end(); paths_itr++) {
             root_node = paths_itr->first;
-          //  cycle_3_count[root_node] = 0;
+            //  cycle_3_count[root_node] = 0;
             for (map<int, vector<pathBundle>>::iterator it_inner = paths_itr->second.begin();
                  it_inner != paths_itr->second.end(); it_inner++) {
                 cycle_length = it_inner->first;
@@ -594,9 +604,9 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
                     if (count == 0) {
                         lastBundle = currentBundle;
                         cycle_count = pathCount(currentBundle);
-                      //  if (cycle_length == 3) {
-                      //      cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                      //  }
+                        //  if (cycle_length == 3) {
+                        //      cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                        //  }
                         cycleResult << currentBundle.printPath() << "\n";
 
                         all_cycle[cycle_length] += cycle_count;
@@ -610,9 +620,9 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
                             }
                             if (currentBundle.path[cycle_length - 1].time.size() > 0) {
                                 cycle_count = pathCount(currentBundle);
-                         //       if (cycle_length == 3) {
-                         //           cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                         //       }
+                                //       if (cycle_length == 3) {
+                                //           cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                                //       }
                                 cycleResult << currentBundle.printPath() << "\n";
                                 all_cycle[cycle_length] += cycle_count;
 
@@ -630,9 +640,9 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
                         } else {
                             lastBundle = currentBundle;
                             cycle_count = pathCount(currentBundle);
-                          //  if (cycle_length == 3) {
-                          //      cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
-                          //  }
+                            //  if (cycle_length == 3) {
+                            //      cycle_3_count[root_node] = cycle_3_count[root_node] + cycle_count;
+                            //  }
                             cycleResult << currentBundle.printPath() << "\n";
                             all_cycle[cycle_length] += cycle_count;
                         }
@@ -854,7 +864,7 @@ void unblock(nodeid v, int t_v, int t_e) {
 
 bool
 allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_till_here,
-        std::set<int> candidates, vector<int> *cycleLengthArray) {
+        std::set<int> candidates, vector<int> *cycleLengthArray, monitor *m) {
     ct[w] = t_s;
     int lastp = 0;
     set<pedge> E;
@@ -878,7 +888,7 @@ allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_ti
         E.erase(x);
     }
 
-
+    m->edge_count += E.size();
     int cyclelenght;
     for (auto x: E) {
         if (candidates.count(x.toVertex) > 0) {
@@ -894,6 +904,7 @@ allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_ti
                 if (path_till_here.size() + 1 > 2) {
                     //   std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
                     cyclelenght = path_till_here.size() + 1;
+                    m->cycles[cyclelenght]++;
                     std::string resultline = "Found cycle," + to_string(cyclelenght) + ",";
                     (*cycleLengthArray)[cyclelenght] = (*cycleLengthArray)[cyclelenght] + 1;
                     for (int i = 0; i < path_till_here.size(); i++) {
@@ -924,7 +935,7 @@ allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_ti
             newcand.erase(x);
             vector<std::string> newpath = path_till_here;
             newpath.push_back(to_string(w) + "," + to_string(x) + "," + to_string(t_min));
-            bool pathFound = allPath(x, rootnode, t_min + 1, t_e, newpath, newcand, cycleLengthArray);
+            bool pathFound = allPath(x, rootnode, t_min + 1, t_e, newpath, newcand, cycleLengthArray, m);
             if (ct[x] <= t_min || !pathFound) {
                 time_x.clear();
                 U[x].insert(make_pair(w, t_min));
@@ -1068,7 +1079,8 @@ void testCountPath() {
 }
 
 int
-allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidates, vector<int> *cycleLengthArray) {
+allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidates, vector<int> *cycleLengthArray,
+              monitor *m) {
     edgeBundle lastEdge = path_bundle_till_here.getLastEdge();
     int t_current = lastEdge.time.getMinTime();
     int v_current = lastEdge.to_node;
@@ -1097,10 +1109,11 @@ allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidate
     }
     if (E.size() == 0) {
         return lastp;
-    }else{
-        if(E.size()>max_E_count){
-            max_E_count=E.size();
+    } else {
+        if (E.size() > max_E_count) {
+            max_E_count = E.size();
         }
+        m->edge_count += E.size();
     }
 
     int cyclelenght;
@@ -1125,7 +1138,7 @@ allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidate
         if (cycle_length > 2) {
             // resultAllPath.insert(cycle.printPath());
             resultAllPathBundle[rootnode][cycle_length].push_back(cycle);
-
+            m->cycles[cycle_length]++;
 
         }
 
@@ -1156,7 +1169,7 @@ allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidate
             eb.to_node = x;
             pathBundle newPathBundle = expandPathBundle(path_bundle_till_here, eb);
             if (newPathBundle.path.size() != 0) {
-                int last_x = allPathBundle(newPathBundle, t_e, candidates, cycleLengthArray);
+                int last_x = allPathBundle(newPathBundle, t_e, candidates, cycleLengthArray, m);
                 if (last_x > lastp) {
                     lastp = last_x;
                 }
@@ -1225,12 +1238,12 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
     }
     if (E.size() == 0) {
         return lastp;
-    }else{
+    } else {
 
-        int temp=E.size();
-        if(temp> max_E_count){
+        int temp = E.size();
+        if (temp > max_E_count) {
 
-            max_E_count=E.size();
+            max_E_count = E.size();
         }
     }
 
@@ -1419,11 +1432,12 @@ set<int> getAllTime(set<pedge> E, nodeid dst) {
 }
 
 
-void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, int window_bracket,
-                bool isCompressed, bool candidates_provided, bool use_bundle, vector<int> *cycleLengthArray) {
-   candidates.insert(rootnode);
-
-
+string DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, int window_bracket,
+                  bool isCompressed, bool candidates_provided, bool use_bundle, vector<int> *cycleLengthArray) {
+    candidates.insert(rootnode);
+    string monitor_result = "";
+    monitor m;
+    Platform::Timer monitor_timer;
     set<pedge> neighbours;
     if (isCompressed) {
         neighbours = getFilteredData(rootnode, t_s,
@@ -1444,6 +1458,7 @@ void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, i
             U.clear();
             tb.times = getAllTime(neighbours, x);
             if (tb.times.size() > 0) {
+                m.clear();
                 set<int> tempcanidates = candidates;
                 tempcanidates.erase(x);
                 pathBundle path_bundle_till_here;
@@ -1451,8 +1466,28 @@ void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, i
                 eb.from_node = rootnode;
                 eb.to_node = x;
                 eb.time = tb;
+
                 path_bundle_till_here.path.push_back(eb);
-                allPathBundle(path_bundle_till_here, t_end, tempcanidates, cycleLengthArray);
+                monitor_timer.Start();
+                m.candidate_count=tempcanidates.size()-1;
+                allPathBundle(path_bundle_till_here, t_end, tempcanidates, cycleLengthArray, &m);
+                monitor_result =
+                        monitor_result + to_string(rootnode) + "," + to_string(x) + "," + to_string(m.candidate_count) +
+                        "," + to_string(m.edge_count) + "," + to_string(monitor_timer.LiveElapsedMilliseconds());
+                monitor_timer.Stop();
+                int max_cycle = 0;
+                for (int i = 0; i < 50; i++) {
+                    if (m.cycles[i] > 0) {
+                        if (i > max_cycle) {
+                            max_cycle = i;
+                        }
+                    }
+                }
+                for (int j = 2; j <= max_cycle; ++j) {
+                    monitor_result = monitor_result + "," + to_string(j) + ":" + to_string(m.cycles[j]);
+                }
+                monitor_result = monitor_result + "\n";
+
             }
 
         }
@@ -1468,7 +1503,26 @@ void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, i
                     vector<std::string> path_till_here;
                     path_till_here.push_back(
                             to_string(rootnode) + "," + to_string(x.toVertex) + "," + to_string(x.time));
-                    allPath(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, tempcandidate, cycleLengthArray);
+                    monitor_timer.Start();
+                    allPath(x.toVertex, rootnode, x.time + 1, t_end, path_till_here, tempcandidate, cycleLengthArray,
+                            &m);
+                    monitor_result =
+                            monitor_result + to_string(rootnode) + "," + to_string(x.toVertex) + "," +
+                            to_string(m.candidate_count) +
+                            "," + to_string(m.edge_count) + "," + to_string(monitor_timer.LiveElapsedMilliseconds());
+                    monitor_timer.Stop();
+                    int max_cycle = 0;
+                    for (int i = 0; i < 50; i++) {
+                        if (m.cycles[i] > 0) {
+                            if (i > max_cycle) {
+                                max_cycle = i;
+                            }
+                        }
+                    }
+                    for (int j = 3; j <= max_cycle; ++j) {
+                        monitor_result = monitor_result + "," + to_string(j) + ":" + to_string(m.cycles[j]);
+                    }
+                    monitor_result = monitor_result + "\n";
                 } else {
                     std::set<int> seen_node;
                     seen_node.insert(x.toVertex);
@@ -1483,7 +1537,7 @@ void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, i
             }
         }
     }
-
+    return monitor_result;
 }
 
 
@@ -1652,7 +1706,7 @@ void DynamicDFSExact(exactCandidates candidate, int window_bracket, bool use_bun
     ct.clear();
     U.clear();
 
-
+    monitor m;
     int root_node = candidate.root_node;
 
 
@@ -1682,7 +1736,7 @@ void DynamicDFSExact(exactCandidates candidate, int window_bracket, bool use_bun
                 tempcandidate.erase(iterator1->first);
                 pathBundle path_bundle_till_here;
                 path_bundle_till_here.path.push_back(iterator1->second);
-                allPathBundle(path_bundle_till_here, candidate.end_time, tempcandidate, cycleLengthArray);
+                allPathBundle(path_bundle_till_here, candidate.end_time, tempcandidate, cycleLengthArray, &m);
             }
 
         }
