@@ -278,7 +278,7 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
             //if src summary exist transfer it to dst  if it is in window prune away whats not in window
             if (dst_iterator != completeSummary.end()) {
                 if (node_update_time[dst] - timestamp > window_bracket) {
-                    dst_iterator->second.clear();
+                    dst_iterator->second.clean();
                 } else {
                     if (dst_iterator->second.contains(src)) {
 
@@ -1080,7 +1080,7 @@ updateSummary(int src, int dst, int timestamp, int window_bracket, map<int, bloo
         //if src summary exist transfer it to dst  if it is in window prune away whats not in window
         if (dst_iterator != completeSummary.end() & node_update_time.count(dst) > 0) {
             if (abs(node_update_time[dst] - timestamp) > window_bracket) {
-                dst_iterator->second.clear();
+                dst_iterator->second.clean();
             } else {
                 if (dst_iterator->second.contains(src)) {
 

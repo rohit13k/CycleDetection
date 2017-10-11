@@ -189,6 +189,7 @@ int main(int argc, char **argv) {
             }
             cout<<"Memory:"<<getMem()<<endl;
             test.clear();
+
             cout<<"Memory:"<<getMem()<<endl;
         }
         else {
