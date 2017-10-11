@@ -187,10 +187,22 @@ int main(int argc, char **argv) {
                 bloom_filter b;
                 test[i]=b;
             }
-            cout<<"Memory:"<<getMem()<<endl;
-            test.clear();
+            cout<<"Memory before:"<<getMem()<<endl;
 
-            cout<<"Memory:"<<getMem()<<endl;
+test.clear();
+            cout<<"Memory after:"<<getMem()<<endl;
+
+            map<int,string> *test2=new map<int,string>();
+
+            for(int i=0;i<(100*cleanUpLimit);i++){
+
+                (*test2)[i]="asdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasd";
+            }
+            cout<<"Memory before:"<<getMem()<<endl;
+            test2->clear();
+            delete test2;
+
+            cout<<"Memory after:"<<getMem()<<endl;
         }
         else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
