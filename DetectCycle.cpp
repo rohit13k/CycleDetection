@@ -1421,17 +1421,9 @@ set<int> getAllTime(set<pedge> E, nodeid dst) {
 
 void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, int window_bracket,
                 bool isCompressed, bool candidates_provided, bool use_bundle, vector<int> *cycleLengthArray) {
-    ct.clear();
-    U.clear();
+   candidates.insert(rootnode);
 
 
-    candidates.insert(rootnode);
-
-    for (auto x:candidates) {
-        ct[x] = std::numeric_limits<int>::max();
-        set<pair<nodeid, int>> temp;
-        U[x] = temp;
-    }
     set<pedge> neighbours;
     if (isCompressed) {
         neighbours = getFilteredData(rootnode, t_s,
@@ -1448,14 +1440,11 @@ void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, i
             }
         }
         for (auto x:V) {
-
             ct.clear();
             U.clear();
             tb.times = getAllTime(neighbours, x);
             if (tb.times.size() > 0) {
-
                 set<int> tempcanidates = candidates;
-
                 tempcanidates.erase(x);
                 pathBundle path_bundle_till_here;
                 edgeBundle eb;
@@ -1463,7 +1452,6 @@ void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, i
                 eb.to_node = x;
                 eb.time = tb;
                 path_bundle_till_here.path.push_back(eb);
-
                 allPathBundle(path_bundle_till_here, t_end, tempcanidates, cycleLengthArray);
             }
 
@@ -1471,8 +1459,8 @@ void DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates, i
     } else {
         for (auto x:neighbours) {
             if (candidates.count(x.toVertex) > 0) {
-
-
+                ct.clear();
+                U.clear();
                 if (candidates_provided) {
                     std::set<int> tempcandidate = candidates;
 
