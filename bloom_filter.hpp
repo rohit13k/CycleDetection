@@ -231,7 +231,7 @@ public:
         return (0 == table_size_);
     }
 
-    inline void clear() {
+    inline void clean() {
         std::fill(bit_table_.begin(), bit_table_.end(), static_cast<unsigned char>(0x00));
         inserted_element_count_ = 0;
     }
