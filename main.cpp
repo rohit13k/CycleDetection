@@ -4,7 +4,7 @@
 #include "Timer.h"
 #include "MemoryMonitor.h"
 #include "CycleRootFinder.h"
-
+#include "SignificanceTester.h"
 using namespace std;
 
 int main(int argc, char **argv) {
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
                                                      true, "bool");
         TCLAP::ValueArg<int> cycle("l", "cycleLenght", "cycle lenght", false, 80, "int");
         TCLAP::ValueArg<bool> use_bundle("b", "use_bundle", "candidate list is provided", false,
-                                                     false, "bool");
+                                         false, "bool");
         cmd.add(inputGraphArg);
         cmd.add(windowArg);
         cmd.add(resultArg);
@@ -134,18 +134,19 @@ int main(int argc, char **argv) {
             std::cout << "Finding root nodes using bidirectional bloom: input: " << inputGraph << " result: "
                       << root_file << std::endl;
 
-         //   set<approxCandidates> root_candidates = findRootNodesApproxBothDirection(inputGraph, root_file, window,
-         //                                                                            cleanUpLimit, reverseEdge);
-            set<approxCandidatesNew> root_candidates = findRootNodesApproxBothDirectionNew(inputGraph, root_file, window,
-                                                                                                cleanUpLimit, reverseEdge);
+            //   set<approxCandidates> root_candidates = findRootNodesApproxBothDirection(inputGraph, root_file, window,
+            //                                                                            cleanUpLimit, reverseEdge);
+            set<approxCandidatesNew> root_candidates = findRootNodesApproxBothDirectionNew(inputGraph, root_file,
+                                                                                           window,
+                                                                                           cleanUpLimit, reverseEdge);
             pend = timer.LiveElapsedSeconds();
             std::cout << "Time to find all root candidates: " << pend << std::endl;
             std::cout << "Memory: " << getMem() << std::endl;
             std::cout << "Finding cycles using  bloom: input: " << inputGraph << " result: " << resultFile << std::endl;
             std::string cycleFile = resultFile;
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");
-           // findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile, window, reverseEdge,use_bundle.getValue());
-            findAllCycleUsingBloom(inputGraph, &root_candidates, cycleFile, window, reverseEdge,true);
+            // findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile, window, reverseEdge,use_bundle.getValue());
+            findAllCycleUsingBloom(inputGraph, &root_candidates, cycleFile, window, reverseEdge, true);
             std::cout << "Time to find cycle using bloom: " << timer.LiveElapsedSeconds() - pend << std::endl;
 
         } else if (rootAlgo == 8) {
@@ -164,7 +165,7 @@ int main(int argc, char **argv) {
             std::cout << "Time to find all root candidates: " << pend << std::endl;
             std::cout << "Finding cycles using  set: input: " << inputGraph << " result: " << resultFile << std::endl;
 
-            string cycle_file=resultFile;
+            string cycle_file = resultFile;
             cycle_file.replace(cycle_file.end() - 3, cycle_file.end(), "cycle");
             findAllCycleUsingSet(inputGraph, &root_candidates, cycle_file,
                                  window, reverseEdge, use_bundle.getValue());
@@ -177,32 +178,38 @@ int main(int argc, char **argv) {
 
             pend = timer.LiveElapsedSeconds();
             std::cout << "Time to find seeds: " << pend << std::endl;
-            string compress_seeds=combineSeeds(resultFile,window);
-            std::cout << "Time to find compress: " <<timer.LiveElapsedSeconds()- pend << std::endl;
+            string compress_seeds = combineSeeds(resultFile, window);
+            std::cout << "Time to find compress: " << timer.LiveElapsedSeconds() - pend << std::endl;
 
-        }else if (rootAlgo == 10) {
+        } else if (rootAlgo == 10) {
             //testCountPath();
-           map<int,bloom_filter> test;
-            for(int i=0;i<cleanUpLimit;i++){
+            map<int, bloom_filter> test;
+            for (int i = 0; i < cleanUpLimit; i++) {
                 bloom_filter b;
-                test[i]=b;
+                test[i] = b;
             }
-            cout<<"Memory before:"<<getMem()<<endl;
+            cout << "Memory before:" << getMem() << endl;
 
-test.clear();
-            cout<<"Memory after:"<<getMem()<<endl;
+            test.clear();
+            cout << "Memory after:" << getMem() << endl;
 
-            map<int,nodeid > test2;
+            map<int, nodeid> test2;
 
-            for(int i=0;i<(100*cleanUpLimit);i++){
+            for (int i = 0; i < (100 * cleanUpLimit); i++) {
 
-                test2[i]=1000;
+                test2[i] = 1000;
             }
-            cout<<"Memory before:"<<getMem()<<endl;
-          test2.clear();
-            cout<<"Memory after:"<<getMem()<<endl;
-        }
-        else {
+            cout << "Memory before:" << getMem() << endl;
+            test2.clear();
+            cout << "Memory after:" << getMem() << endl;
+        } else if (rootAlgo == 11) {
+            //test for significance
+            prepareData(inputGraph,resultFile,reverseEdge);
+            string significance_file = "sig_"+inputGraph;
+           getSignificantCycle(window,significance_file);
+         //   cout<<binomialCoeff(5,5)<<endl;
+
+        } else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
         }
 

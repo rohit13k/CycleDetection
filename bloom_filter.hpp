@@ -164,7 +164,7 @@ protected:
 
 public:
 
-    static optimal_param(const bloom_parameters &p ){
+    static void optimal_param(const bloom_parameters &p ){
         bloom_filter::opt_p=p;
     }
     bloom_filter()
