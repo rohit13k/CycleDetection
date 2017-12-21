@@ -24,6 +24,7 @@ void prepareData(std::string dataFile, std::string pathFile, bool reverseEdge) {
     string line;
     string key;
     while (infile >> line) {
+
         templine = Tools::Split(line, ',');
         src = stoi(templine[0]);
         dst = stoi(templine[1]);
@@ -44,6 +45,7 @@ void prepareData(std::string dataFile, std::string pathFile, bool reverseEdge) {
     string signature = "";
     while (pfile >> line) {
         signature = "";
+
         templine = Tools::Split(line, ',');
         length = stoi(templine[1]);
         idx = 2;

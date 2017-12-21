@@ -780,7 +780,7 @@ void findCycle(nodeid rootNode, int t_s, std::set<nodeid> *candidates, int windo
         initialpath.push_back(to_string(eit->time) + "," + to_string(eit->toVertex));
         seen.insert(eit->toVertex);
         if (findTemporalPath(eit->toVertex, rootNode, t_s, t_s + window_bracket, &initialpath, seen, candidates)) {
-            std::cout << "Found cycle: " << initialpath.size() << " : ";
+            std::cout << "path: " << initialpath.size() << " : ";
             for (int i = 0; i < initialpath.size(); i++) {
                 std::cout << "->" << initialpath[i];
             }
@@ -810,7 +810,7 @@ bool findTemporalPath(int src, int dst, int t_s, int t_end, vector<std::string> 
             found = findTemporalPath(edgeIt->toVertex, dst, edgeIt->time + 1, t_end, path_till_here, seen, candidates);
 
             if (found) {
-                //   std::cout << "Found cycle: " << path_till_here->size() << " : ";
+                //   std::cout << "Path: " << path_till_here->size() << " : ";
                 for (int i = 0; i < path_till_here->size(); i++) {
                     //     std::cout << "->" << (*path_till_here)[i];
 
@@ -905,7 +905,7 @@ allPath(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std::string> path_ti
                     //   std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
                     cyclelenght = path_till_here.size() + 1;
                     m->cycles[cyclelenght]++;
-                    std::string resultline = "Found cycle," + to_string(cyclelenght) + ",";
+                    std::string resultline = "Path," + to_string(cyclelenght) + ",";
                     (*cycleLengthArray)[cyclelenght] = (*cycleLengthArray)[cyclelenght] + 1;
                     for (int i = 0; i < path_till_here.size(); i++) {
                         // std::cout << "->" << (path_till_here)[i];
@@ -1366,7 +1366,7 @@ allPathWithoutCandidate(nodeid w, nodeid rootnode, int t_s, int t_e, vector<std:
                 if (path_till_here.size() + 1 > 2) {
                     //   std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
                     cyclelenght = path_till_here.size() + 1;
-                    std::string resultline = "Found cycle," + to_string(cyclelenght) + ",";
+                    std::string resultline = "Path," + to_string(cyclelenght) + ",";
                     (*cycleLengthArray)[cyclelenght] = (*cycleLengthArray)[cyclelenght] + 1;
                     for (int i = 0; i < path_till_here.size(); i++) {
                         // std::cout << "->" << (path_till_here)[i];
@@ -1597,7 +1597,7 @@ void findAllCycleNaive(std::string inputGraph, std::string resultFile, int windo
                         if (allpaths[src][index].rootnode == dst) {//root of the path is destination
 //cycle found
                             if (allpaths[src][index].path.size() > 1) {
-                                string path = "Found cycle, " + to_string(allpaths[src][index].path.size() + 1) + " , ";
+                                string path = "Path, " + to_string(allpaths[src][index].path.size() + 1) + " , ";
                                 cyclecount++;
                                 for (int j = 0; j < allpaths[src][index].path.size(); j++) {
 
@@ -1791,7 +1791,7 @@ allPathApprox(int w, int rootnode, int t_s, int t_e, vector<std::string> path_ti
                 if (path_till_here.size() + 1 > 2) {
                     //   std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
                     cyclelenght = path_till_here.size() + 1;
-                    std::string resultline = "Found cycle," + to_string(cyclelenght) + ",";
+                    std::string resultline = "Path," + to_string(cyclelenght) + ",";
 
                     for (int i = 0; i < path_till_here.size(); i++) {
                         // std::cout << "->" << (path_till_here)[i];
@@ -1872,7 +1872,7 @@ allPathExact(int w, int rootnode, int t_s, int t_e, vector<std::string> path_til
                 if (path_till_here.size() + 1 > 2) {
                     //   std::cout << "Found cycle, " << path_till_here.size() + 1 << " , ";
                     cyclelenght = path_till_here.size() + 1;
-                    std::string resultline = "Found cycle," + to_string(cyclelenght) + ",";
+                    std::string resultline = "Path," + to_string(cyclelenght) + ",";
 
                     for (int i = 0; i < path_till_here.size(); i++) {
                         // std::cout << "->" << (path_till_here)[i];
