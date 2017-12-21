@@ -165,7 +165,7 @@ protected:
 public:
 
     static optimal_param(const bloom_parameters &p ){
-        opt_p=p;
+        bloom_filter::opt_p=p;
     }
     bloom_filter()
             : projected_element_count_(opt_p.projected_element_count),
