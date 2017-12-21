@@ -40,7 +40,7 @@ struct pedge {
 
 
 int readFile(std::string inputFile,bool reverseEdge);
-
+void updateData(int src,int dst,int timestamp);
 std::set<pedge> getFilteredData(int src, int t_s, int t_end, std::set<int> *candidates);
 std::set<pedge> getFilteredData(int src, int t_s, int t_end);
 std::set<pedge> getFilteredData(int src, int t_s);

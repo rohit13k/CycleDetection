@@ -1169,6 +1169,7 @@ allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidate
             eb.to_node = x;
             pathBundle newPathBundle = expandPathBundle(path_bundle_till_here, eb);
             if (newPathBundle.path.size() != 0) {
+                candidates.insert(x);
                 int last_x = allPathBundle(newPathBundle, t_e, candidates, cycleLengthArray, m);
                 if (last_x > lastp) {
                     lastp = last_x;

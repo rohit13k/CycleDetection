@@ -1,0 +1,14 @@
+//
+// Created by Rohit on 21-Dec-17.
+//
+
+#ifndef CYCLEDETECTION_SIGNIFICANCETESTER_H
+#define CYCLEDETECTION_SIGNIFICANCETESTER_H
+
+
+class SignificanceTester {
+
+};
+
+
+#endif //CYCLEDETECTION_SIGNIFICANCETESTER_H

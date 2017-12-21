@@ -427,8 +427,8 @@ findRootNodesApproxBothDirection(std::string input, std::string output, int wind
                      possible_end_time_set_it != possible_end_time_set.end(); ++possible_end_time_set_it) {
                     end_time = possible_end_time_set_it->second;
                     end_neighbour = possible_end_time_set_it->first;
-                    if(end_time==1176433438&timestamp==1176429980){
-                        cout<<endl;
+                    if (end_time == 1176433438 & timestamp == 1176429980) {
+                        cout << endl;
                     }
                     if (end_time - timestamp > 0 & end_time - timestamp < window_bracket) {
                         if (dst != end_neighbour) {
@@ -438,40 +438,41 @@ findRootNodesApproxBothDirection(std::string input, std::string output, int wind
 
                             result << "\n";
                             //create candidates for cycles
-                            if(root_candidate_approx.count(src)>0){
+                            if (root_candidate_approx.count(src) > 0) {
 
-                                bool added=false;
-                                for(map<cycle_time, map<int, bloom_filter>>::iterator cycle_itr=root_candidate_approx[src].begin();cycle_itr!=root_candidate_approx[src].end();cycle_itr++){
-                                    if(abs(cycle_itr->first.start_time-timestamp)<window_bracket){
-                                        int min_ts=min(cycle_itr->first.start_time,timestamp);
-                                        int max_te=max(cycle_itr->first.end_time,end_time);
-                                        if(max_te-min_ts<window_bracket){
-                                            cycle_time old_ct=cycle_itr->first;
+                                bool added = false;
+                                for (map<cycle_time, map<int, bloom_filter>>::iterator cycle_itr = root_candidate_approx[src].begin();
+                                     cycle_itr != root_candidate_approx[src].end(); cycle_itr++) {
+                                    if (abs(cycle_itr->first.start_time - timestamp) < window_bracket) {
+                                        int min_ts = min(cycle_itr->first.start_time, timestamp);
+                                        int max_te = max(cycle_itr->first.end_time, end_time);
+                                        if (max_te - min_ts < window_bracket) {
+                                            cycle_time old_ct = cycle_itr->first;
                                             cycle_time new_ct;
                                             new_ct.start_time = min_ts;
                                             new_ct.end_time = max_te;
-                                            if(new_ct==old_ct){
+                                            if (new_ct == old_ct) {
 
-                                            }else {
+                                            } else {
                                                 map<int, bloom_filter> &temp = cycle_itr->second;
                                                 temp[dst] = completeSummary[dst];
                                                 root_candidate_approx[src][new_ct] = temp;
                                                 root_candidate_approx[src].erase(old_ct);
                                             }
-                                            added=true;
+                                            added = true;
                                             break;
 
                                         }
                                     }
                                 }
-                                if(!added){
+                                if (!added) {
                                     cycle_time ct;
                                     ct.start_time = timestamp;
                                     ct.end_time = end_time;
                                     root_candidate_approx[src][ct][dst] = completeSummary[dst];
                                 }
 
-                            }else{
+                            } else {
                                 cycle_time ct;
                                 ct.start_time = timestamp;
                                 ct.end_time = end_time;
@@ -517,9 +518,10 @@ findRootNodesApproxBothDirection(std::string input, std::string output, int wind
     std::cout << "Memory after compress clear: " << getMem() << std::endl;
     return final_roots;
 }
+
 set<approxCandidatesNew>
 findRootNodesApproxBothDirectionNew(std::string input, std::string output, int window, int cleanUpLimit,
-                                 bool reverseEdge) {
+                                    bool reverseEdge) {
     map<int, bloom_filter> completeSummary;
     //map<root,map<<t_start,t_end>,<dst,approx candidateset>>>
     map<int, map<cycle_time, map<int, bloom_filter>>> root_candidate_approx;
@@ -538,6 +540,8 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
     parameters.random_seed = 0xA5A5A5A5;
     parameters.compute_optimal_parameters();
 
+    bloom_filter::optimal_param(parameters);
+
     std::vector<std::string> templine;
     ifstream infile(input.c_str());
     int src, dst;
@@ -552,8 +556,8 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
     int window_bracket = window * 60 * 60;
     double ptime = 0.0;
 
-   // ofstream result;
-   // result.open(output.c_str());
+    // ofstream result;
+    // result.open(output.c_str());
 
     vector<string> all_data;
     while (infile >> line) {
@@ -572,9 +576,9 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
                                             &node_update_time);
         if (root_neigbhour_time.first != 0) {
             endNode en;
-            en.node_id=root_neigbhour_time.second.first;
-            en.end_time=root_neigbhour_time.second.second;
-            en.candidates=completeSummary[dst];
+            en.node_id = root_neigbhour_time.second.first;
+            en.end_time = root_neigbhour_time.second.second;
+            en.candidates = completeSummary[dst];
             rootnode_end_time_set[root_neigbhour_time.first].insert(en);
         }
         count++;
@@ -631,48 +635,49 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
 
                     if (end_time - timestamp > 0 & end_time - timestamp < window_bracket) {
                         if (dst != end_neighbour) {
-                        //    result << src << ",";
-                        //    result << timestamp << ",";//start of cycle
-                        //    result << dst; //end of cycle
+                            //    result << src << ",";
+                            //    result << timestamp << ",";//start of cycle
+                            //    result << dst; //end of cycle
 
-                        //    result << "\n";
-                            old_bloom=possible_end_time_set_it->candidates;
-                            old_bloom&=completeSummary[dst];
+                            //    result << "\n";
+                            old_bloom = possible_end_time_set_it->candidates;
+                            old_bloom &= completeSummary[dst];
                             //create candidates for cycles
-                            if(root_candidate_approx.count(src)>0){
+                            if (root_candidate_approx.count(src) > 0) {
 
-                                bool added=false;
-                                for(map<cycle_time, map<int, bloom_filter>>::iterator cycle_itr=root_candidate_approx[src].begin();cycle_itr!=root_candidate_approx[src].end();cycle_itr++){
-                                    if(abs(cycle_itr->first.start_time-timestamp)<window_bracket){
-                                        int min_ts=min(cycle_itr->first.start_time,timestamp);
-                                        int max_te=max(cycle_itr->first.end_time,end_time);
-                                        if(max_te-min_ts<window_bracket){
-                                            cycle_time old_ct=cycle_itr->first;
+                                bool added = false;
+                                for (map<cycle_time, map<int, bloom_filter>>::iterator cycle_itr = root_candidate_approx[src].begin();
+                                     cycle_itr != root_candidate_approx[src].end(); cycle_itr++) {
+                                    if (abs(cycle_itr->first.start_time - timestamp) < window_bracket) {
+                                        int min_ts = min(cycle_itr->first.start_time, timestamp);
+                                        int max_te = max(cycle_itr->first.end_time, end_time);
+                                        if (max_te - min_ts < window_bracket) {
+                                            cycle_time old_ct = cycle_itr->first;
                                             cycle_time new_ct;
                                             new_ct.start_time = min_ts;
                                             new_ct.end_time = max_te;
-                                            if(new_ct==old_ct){
+                                            if (new_ct == old_ct) {
 
-                                            }else {
+                                            } else {
                                                 map<int, bloom_filter> &temp = cycle_itr->second;
                                                 temp[dst] = old_bloom;
                                                 root_candidate_approx[src][new_ct] = temp;
                                                 root_candidate_approx[src].erase(old_ct);
                                             }
-                                            added=true;
+                                            added = true;
                                             break;
 
                                         }
                                     }
                                 }
-                                if(!added){
+                                if (!added) {
                                     cycle_time ct;
                                     ct.start_time = timestamp;
                                     ct.end_time = end_time;
                                     root_candidate_approx[src][ct][dst] = old_bloom;
                                 }
 
-                            }else{
+                            } else {
                                 cycle_time ct;
                                 ct.start_time = timestamp;
                                 ct.end_time = end_time;
@@ -717,6 +722,200 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
 
     std::cout << "Memory after compress clear: " << getMem() << std::endl;
     return final_roots;
+}
+//pending
+void findCyclesBothDirection(std::string input, std::string output, int window, int cleanUpLimit,
+                             bool reverseEdge) {
+    map<int, bloom_filter> completeSummary;
+    //map<root,map<<t_start,t_end>,<dst,approx candidateset>>>
+    map<int, map<cycle_time, map<int, bloom_filter>>> root_candidate_approx;
+    map<int, int> node_update_time;
+    map<int, set<endNode>> rootnode_end_time_set;
+    map<int, set<endNode>>::iterator rootnode_end_time_set_itr;
+    bloom_parameters parameters;
+    pair<int, pair<int, int>> root_neigbhour_time;
+    // How many elements roughly do we expect to insert?
+    parameters.projected_element_count = 1000;
+
+    // Maximum tolerable false positive probability? (0,1)
+    parameters.false_positive_probability = 0.0001; // 1 in 10000
+
+    // Simple randomizer (optional)
+    parameters.random_seed = 0xA5A5A5A5;
+    parameters.compute_optimal_parameters();
+
+    std::vector<std::string> templine;
+    ifstream infile(input.c_str());
+    int src, dst;
+
+    string line;
+    Platform::Timer timer;
+    timer.Start();
+    int timestamp;
+
+    int count = 0;
+
+    int window_bracket = window * 60 * 60;
+    double ptime = 0.0;
+
+
+    // ofstream result;
+    // result.open(output.c_str());
+
+    vector<string> all_data;
+    while (infile >> line) {
+
+        templine = Tools::Split(line, ',');
+        src = stoi(templine[0]);
+        dst = stoi(templine[1]);
+        if (reverseEdge) {
+            src = stoi(templine[1]);
+            dst = stoi(templine[0]);
+        }
+        timestamp = stoi(templine[2]);
+        updateData(src, dst, timestamp);
+        all_data.push_back(line);
+        root_neigbhour_time = updateSummary(dst, src, timestamp, window_bracket, &completeSummary, parameters,
+                                            &node_update_time);
+        if (root_neigbhour_time.first != 0) {
+            endNode en;
+            en.node_id = root_neigbhour_time.second.first;
+            en.end_time = root_neigbhour_time.second.second;
+            en.candidates = completeSummary[dst];
+            rootnode_end_time_set[root_neigbhour_time.first].insert(en);
+        }
+        count++;
+        if (count % cleanUpLimit == 0) {
+            //do cleanup
+
+            double parseTime = timer.LiveElapsedSeconds() - ptime;
+            ptime = timer.LiveElapsedSeconds();
+            int cleanupsize = cleanup(&completeSummary, &node_update_time, timestamp, window_bracket);
+            std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
+            cout << ",summary size," << completeSummary.size();
+            cout << ",memory," << getMem();
+            cout << " ,delete count," << cleanupsize;
+            std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
+        }
+    }
+
+    int end_time;
+    bloom_filter old_bloom;
+    cout << "Memory after first pass: " << getMem() << std::endl;
+    int end_neighbour;
+    completeSummary.clear();
+    node_update_time.clear();
+
+    cout << "Memory after first pass after clear: " << getMem() << std::endl;
+    count = 0;
+    cout << rootnode_end_time_set.size() << endl;
+    set<endNode>::iterator possible_end_time_set_it;
+
+    for (int j = all_data.size() - 1; j >= 0; j--) {
+        line = all_data[j];
+        templine = Tools::Split(line, ',');
+        src = stoi(templine[0]);
+        dst = stoi(templine[1]);
+        if (reverseEdge) {
+            src = stoi(templine[1]);
+            dst = stoi(templine[0]);
+        }
+        timestamp = stoi(templine[2]);
+
+        root_neigbhour_time = updateSummary(src, dst, timestamp, window_bracket, &completeSummary, parameters,
+                                            &node_update_time);
+        if (root_neigbhour_time.first != 0) {
+//check if there is a valid end for this start node.
+            rootnode_end_time_set_itr = rootnode_end_time_set.find(root_neigbhour_time.first);
+            if (rootnode_end_time_set_itr != rootnode_end_time_set.end()) {
+
+                set<endNode> &possible_end_time_set = rootnode_end_time_set_itr->second;
+
+                for (possible_end_time_set_it = possible_end_time_set.begin();
+                     possible_end_time_set_it != possible_end_time_set.end(); ++possible_end_time_set_it) {
+                    end_time = possible_end_time_set_it->end_time;
+                    end_neighbour = possible_end_time_set_it->node_id;
+
+                    if (end_time - timestamp > 0 & end_time - timestamp < window_bracket) {
+                        if (dst != end_neighbour) {
+                            //    result << src << ",";
+                            //    result << timestamp << ",";//start of cycle
+                            //    result << dst; //end of cycle
+
+                            //    result << "\n";
+                            old_bloom = possible_end_time_set_it->candidates;
+                            old_bloom &= completeSummary[dst];
+                            //create candidates for cycles
+                            if (root_candidate_approx.count(src) > 0) {
+
+                                bool added = false;
+                                for (map<cycle_time, map<int, bloom_filter>>::iterator cycle_itr = root_candidate_approx[src].begin();
+                                     cycle_itr != root_candidate_approx[src].end(); cycle_itr++) {
+                                    if (abs(cycle_itr->first.start_time - timestamp) < window_bracket) {
+                                        int min_ts = min(cycle_itr->first.start_time, timestamp);
+                                        int max_te = max(cycle_itr->first.end_time, end_time);
+                                        if (max_te - min_ts < window_bracket) {
+                                            cycle_time old_ct = cycle_itr->first;
+                                            cycle_time new_ct;
+                                            new_ct.start_time = min_ts;
+                                            new_ct.end_time = max_te;
+                                            if (new_ct == old_ct) {
+
+                                            } else {
+                                                map<int, bloom_filter> &temp = cycle_itr->second;
+                                                temp[dst] = old_bloom;
+                                                root_candidate_approx[src][new_ct] = temp;
+                                                root_candidate_approx[src].erase(old_ct);
+                                            }
+                                            added = true;
+                                            break;
+
+                                        }
+                                    }
+                                }
+                                if (!added) {
+                                    cycle_time ct;
+                                    ct.start_time = timestamp;
+                                    ct.end_time = end_time;
+                                    root_candidate_approx[src][ct][dst] = old_bloom;
+                                }
+
+                            } else {
+                                cycle_time ct;
+                                ct.start_time = timestamp;
+                                ct.end_time = end_time;
+                                root_candidate_approx[src][ct][dst] = old_bloom;
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+        count++;
+        if (count % cleanUpLimit == 0) {
+            //do cleanup
+
+            double parseTime = timer.LiveElapsedSeconds() - ptime;
+            ptime = timer.LiveElapsedSeconds();
+            int cleanupsize = cleanup(&completeSummary, &node_update_time, timestamp, window_bracket);
+            std::cout << "finished parsing, count," << count << "," << parseTime << "," << getMem();
+            cout << ",summary size," << completeSummary.size();
+            cout << ",memory," << getMem();
+            cout << " ,delete count," << cleanupsize;
+            std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
+        }
+    }
+    //result.close();
+
+    std::cout << "Time to find Cycles: " << timer.LiveElapsedSeconds() << std::endl;
+
+    completeSummary.clear();
+    node_update_time.clear();
+
+    timer.Stop();
+
+
 }
 
 void print(map<int, map<cycle_time, map<int, set<int>>>> root_candidate_exact) {
@@ -803,7 +1002,7 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
 
         all_data.push_back(line);
         root_neigbhour_time = updateSummaryExact(dst, src, timestamp, window_bracket, &completeSummary,
-                                            &node_update_time);
+                                                 &node_update_time);
         if (root_neigbhour_time.first != 0) {
             rootnode_end_time_set[root_neigbhour_time.first].insert(root_neigbhour_time.second);
         }
@@ -845,7 +1044,7 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
         timestamp = stoi(templine[2]);
 
         root_neigbhour_time = updateSummaryExact(src, dst, timestamp, window_bracket, &completeSummary,
-                                            &node_update_time);
+                                                 &node_update_time);
         if (root_neigbhour_time.first != 0) {
 //check if there is a valid end for this start node.
             rootnode_end_time_set_itr = rootnode_end_time_set.find(root_neigbhour_time.first);
@@ -914,7 +1113,7 @@ findRootNodesExactBothDirection(std::string input, std::string output, int windo
 
 set<approxCandidatesNew>
 compressRootCandidatesNew(map<int, map<cycle_time, map<int, bloom_filter>>> *root_candidates,
-                       int window_bracket) {
+                          int window_bracket) {
     set<approxCandidatesNew> result;
     int root_node, max_end_time;
     int count = 0;
@@ -930,12 +1129,12 @@ compressRootCandidatesNew(map<int, map<cycle_time, map<int, bloom_filter>>> *roo
             if (count == 0) {
                 //create new candidates
                 ac = new approxCandidatesNew();
-                ac->start_time=it_inner->first.start_time;
+                ac->start_time = it_inner->first.start_time;
                 max_end_time = it_inner->first.start_time + window_bracket;
                 //update candidates
                 ac->root_node = root_node;
                 ac->end_time = it_inner->first.end_time;
-                ac->neighbours_candidates=it_inner->second;
+                ac->neighbours_candidates = it_inner->second;
 
             } else {
                 if (it_inner->first.end_time < max_end_time) {
@@ -943,11 +1142,12 @@ compressRootCandidatesNew(map<int, map<cycle_time, map<int, bloom_filter>>> *roo
                     if (it_inner->first.end_time > ac->end_time) {
                         ac->end_time = it_inner->first.end_time;
                     }
-                    for(map<int, bloom_filter>::iterator neighbours_itr=it_inner->second.begin();neighbours_itr!=it_inner->second.end();neighbours_itr++){
-                        if(ac->neighbours_candidates.count(neighbours_itr->first)>0){
-                            ac->neighbours_candidates[neighbours_itr->first]|=neighbours_itr->second;
-                        }else{
-                            ac->neighbours_candidates[neighbours_itr->first]=neighbours_itr->second;
+                    for (map<int, bloom_filter>::iterator neighbours_itr = it_inner->second.begin();
+                         neighbours_itr != it_inner->second.end(); neighbours_itr++) {
+                        if (ac->neighbours_candidates.count(neighbours_itr->first) > 0) {
+                            ac->neighbours_candidates[neighbours_itr->first] |= neighbours_itr->second;
+                        } else {
+                            ac->neighbours_candidates[neighbours_itr->first] = neighbours_itr->second;
                         }
                     }
 
@@ -956,12 +1156,12 @@ compressRootCandidatesNew(map<int, map<cycle_time, map<int, bloom_filter>>> *roo
                     result.insert(*ac);
                     //create new candidates
                     ac = new approxCandidatesNew();
-                    ac->start_time=it_inner->first.start_time;
+                    ac->start_time = it_inner->first.start_time;
                     max_end_time = it_inner->first.start_time + window_bracket;
                     //update candidates
                     ac->end_time = it_inner->first.end_time;
                     ac->root_node = root_node;
-                    ac->neighbours_candidates=it_inner->second;
+                    ac->neighbours_candidates = it_inner->second;
 
                 }
             }
@@ -1043,7 +1243,7 @@ void mergeSummaries(map<int, set<int>> *summary, exactCandidates *ac, int start_
             ac->candidates_nodes = it_neighbours->second;
             first_neighbour = false;
         } else {
-            ac->candidates_nodes.insert(it_neighbours->second.begin(),it_neighbours->second.end());
+            ac->candidates_nodes.insert(it_neighbours->second.begin(), it_neighbours->second.end());
         }
     }
 }
@@ -1061,17 +1261,19 @@ updateSummary(int src, int dst, int timestamp, int window_bracket, map<int, bloo
     if (src == dst) {
         //self loop ignored
     } else {
-
+/*
         if (completeSummary.count(src) == 0) {
             //Instantiate Bloom Filter
             bloom_filter filter(parameters);
-            filter.insert(dst);
+             filter.insert(dst);
             completeSummary[src] = filter;
 
         } else {
             completeSummary[src].insert(dst);
 
         }
+        */
+        completeSummary[src].insert(dst);
         node_update_time[src] = timestamp;
         src_iterator = completeSummary.find(src);
         dst_iterator = completeSummary.find(dst);
@@ -1099,7 +1301,7 @@ updateSummary(int src, int dst, int timestamp, int window_bracket, map<int, bloo
     return result;
 }
 
-pair<int,pair<int, int>>
+pair<int, pair<int, int>>
 updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int, set<int>> *summary,
                    map<int, int> *update_time) {
     map<int, set<int>>::iterator src_iterator;
@@ -1132,7 +1334,7 @@ updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int,
             if (abs(node_update_time[dst] - timestamp) > window_bracket) {
                 dst_iterator->second.clear();
             } else {
-                if (dst_iterator->second.count(src)>0) {
+                if (dst_iterator->second.count(src) > 0) {
 
                     if (dst_iterator->second.size() > 1) {
                         result = make_pair(src, make_pair(dst, timestamp));
@@ -1140,7 +1342,7 @@ updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int,
                     }
 
                 }
-                src_summary.insert(dst_iterator->second.begin(),dst_iterator->second.end());
+                src_summary.insert(dst_iterator->second.begin(), dst_iterator->second.end());
 
             }
         }
@@ -1321,28 +1523,29 @@ string combineSeeds(std::string root_file, int window) {
     for (map<int, vector<seed>>::iterator seed_itr = all_seeds.begin();
          seed_itr != all_seeds.end(); seed_itr++) {
         root_node = seed_itr->first;
-        sort(seed_itr->second.begin(),seed_itr->second.end());
-        seed current_seed=seed_itr->second[0];
-        current_start_time=current_seed.start_time;
-        current_end_time=current_seed.end_time;
-        max_end_time=current_start_time+window_bracket;
-        for(int i=1;i<seed_itr->second.size();i++){
-            current_end_time=seed_itr->second[i].end_time;
-            if(current_end_time<max_end_time){
-                if(current_seed.end_time<current_end_time){
-                   current_seed.end_time=current_end_time;
+        sort(seed_itr->second.begin(), seed_itr->second.end());
+        seed current_seed = seed_itr->second[0];
+        current_start_time = current_seed.start_time;
+        current_end_time = current_seed.end_time;
+        max_end_time = current_start_time + window_bracket;
+        for (int i = 1; i < seed_itr->second.size(); i++) {
+            current_end_time = seed_itr->second[i].end_time;
+            if (current_end_time < max_end_time) {
+                if (current_seed.end_time < current_end_time) {
+                    current_seed.end_time = current_end_time;
                 }
-                current_seed.candidates.insert(seed_itr->second[i].candidates.begin(),seed_itr->second[i].candidates.end());
-            }else{
-                result<<root_node<<","<<current_seed.pringString()<<endl;
-                current_seed=seed_itr->second[i];
-                current_start_time=current_seed.start_time;
-                current_end_time=current_seed.end_time;
-                max_end_time=current_start_time+window_bracket;
+                current_seed.candidates.insert(seed_itr->second[i].candidates.begin(),
+                                               seed_itr->second[i].candidates.end());
+            } else {
+                result << root_node << "," << current_seed.pringString() << endl;
+                current_seed = seed_itr->second[i];
+                current_start_time = current_seed.start_time;
+                current_end_time = current_seed.end_time;
+                max_end_time = current_start_time + window_bracket;
             }
 
         }
-        result<<root_node<<","<<current_seed.pringString()<<endl;
+        result << root_node << "," << current_seed.pringString() << endl;
     }
     result.close();
 

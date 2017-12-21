@@ -50,7 +50,7 @@ public:
               maximum_size(std::numeric_limits<unsigned long long int>::max()),
               minimum_number_of_hashes(1),
               maximum_number_of_hashes(std::numeric_limits<unsigned int>::max()),
-              projected_element_count(10000),
+              projected_element_count(1000),
               false_positive_probability(1.0 / projected_element_count),
               random_seed(0xA5A5A5A55A5A5A5AULL) {}
 
@@ -154,14 +154,34 @@ public:
 };
 
 class bloom_filter {
+
 protected:
 
     typedef unsigned int bloom_type;
     typedef unsigned char cell_type;
     typedef std::vector<unsigned char> table_type;
+    static bloom_parameters opt_p;
 
 public:
 
+    static optimal_param(const bloom_parameters &p ){
+        opt_p=p;
+    }
+    bloom_filter()
+            : projected_element_count_(opt_p.projected_element_count),
+              inserted_element_count_(0),
+              random_seed_((opt_p.random_seed * 0xA5A5A5A5) + 1),
+              bit_table_(opt_p.optimal_parameters.table_size/bits_per_char, static_cast<unsigned char>(0x00)),
+              desired_false_positive_probability_(opt_p.false_positive_probability) {
+        salt_count_ = opt_p.optimal_parameters.number_of_hashes;
+          table_size_ = opt_p.optimal_parameters.table_size;
+
+
+        generate_unique_salt();
+
+        //  bit_table_.resize(table_size_ / bits_per_char, static_cast<unsigned char>(0x00));
+    }
+/*
     bloom_filter()
             : salt_count_(0),
               table_size_(0),
@@ -170,17 +190,20 @@ public:
               random_seed_(0),
               desired_false_positive_probability_(0.0) {}
 
+*/
     bloom_filter(const bloom_parameters &p)
             : projected_element_count_(p.projected_element_count),
               inserted_element_count_(0),
               random_seed_((p.random_seed * 0xA5A5A5A5) + 1),
+              bit_table_(p.optimal_parameters.table_size/bits_per_char, static_cast<unsigned char>(0x00)),
               desired_false_positive_probability_(p.false_positive_probability) {
         salt_count_ = p.optimal_parameters.number_of_hashes;
         table_size_ = p.optimal_parameters.table_size;
 
+
         generate_unique_salt();
 
-        bit_table_.resize(table_size_ / bits_per_char, static_cast<unsigned char>(0x00));
+      //  bit_table_.resize(table_size_ / bits_per_char, static_cast<unsigned char>(0x00));
     }
 
     bloom_filter(const bloom_filter &filter) {
@@ -555,6 +578,8 @@ protected:
     unsigned long long int random_seed_;
     double desired_false_positive_probability_;
 };
+
+
 
 inline bloom_filter operator&(const bloom_filter &a, const bloom_filter &b) {
     bloom_filter result = a;

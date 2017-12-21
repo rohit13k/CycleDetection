@@ -47,6 +47,9 @@ int readFile(std::string inputFile, bool reverseEdge) {
     return 0;
 }
 
+void updateData(int src,int dst,int timestamp){
+    sorteddata[src][timestamp].insert(dst);
+}
 /*
  * Returns list of edges <src,x,t> such that t is between t_s and t_end
  * and if candidates list is provided x should be in candidates
