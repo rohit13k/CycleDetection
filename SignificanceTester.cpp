@@ -134,25 +134,22 @@ void getSignificantCycle(int window, string output) {
         double expected_cnt=P*cnt;
 
 
-        if(it->second>ceil(expected_cnt)){
-            cout << "P, " << P ;
-            cout<<" count, "<<cnt;
-            cout<<" cnt time p ,"<<expected_cnt;
-            cout<<" actual count, "<<it->second;
-
-            cout<<" length, "<<length<<endl;
-
-
-            significant_count++;
+        if(it->second>2*expected_cnt){
+                       significant_count++;
         }else{
            // cout<<"non significant cycle of length"<<length<<" : "<<it->second<<endl;
             not_significant_count++;
         }
+        cout << "P, " << P ;
+        cout<<",count, "<<cnt;
+        cout<<",cnt time p ,"<<expected_cnt;
+        cout<<",actual count, "<<it->second;
 
+        cout<<",length, "<<length<<endl;
 
     }
-    cout<<"significant count : "<<significant_count<<endl;
-    cout<<"not significant count : "<<not_significant_count<<endl;
+    cout<<"significant count,"<<significant_count<<endl;
+    cout<<"not significant count,"<<not_significant_count<<endl;
 
 
 }

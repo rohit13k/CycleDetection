@@ -5,6 +5,7 @@
 #include "MemoryMonitor.h"
 #include "CycleRootFinder.h"
 #include "SignificanceTester.h"
+
 using namespace std;
 
 int main(int argc, char **argv) {
@@ -90,7 +91,7 @@ int main(int argc, char **argv) {
             //find cycles with the root folder and candidates
             std::string cycleFile = resultFile;
             cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");
-
+            cout << "writing cycles in : " << cycleFile << endl;
             findAllCycle(inputGraph, resultFile, cycleFile, window, isCompressed.getValue(), reverseEdge,
                          candidates_provided, use_bundle.getValue());
             std::cout << "Found all cycles nodes and time " << timer.LiveElapsedSeconds() << std::endl;
@@ -204,10 +205,10 @@ int main(int argc, char **argv) {
             cout << "Memory after:" << getMem() << endl;
         } else if (rootAlgo == 11) {
             //test for significance
-            prepareData(inputGraph,resultFile,reverseEdge);
-            string significance_file = "sig_"+inputGraph;
-           getSignificantCycle(window,significance_file);
-         //   cout<<binomialCoeff(5,5)<<endl;
+            prepareData(inputGraph, resultFile, reverseEdge);
+            string significance_file = "sig_" + inputGraph;
+            getSignificantCycle(window, significance_file);
+            //   cout<<binomialCoeff(5,5)<<endl;
 
         } else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
