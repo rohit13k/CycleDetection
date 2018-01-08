@@ -14,4 +14,4 @@
 
 ## To run:
 ### 1. If using CLion then use Run->Edit configuration->Program arguments and provide the following arguments
--i <full-path-of-input-graph-file> -w <window-in-hour> -o <output-file-location> -p <batch size> -r <bool:edge-revered> -a <algorithm-no> -b <bool:batchmode> -z <bool:compress>
+-i $full-path-of-input-graph-file$ -w $window-in-hour$ -o $output-file-location$ -p $batch size$ -r $bool:edge-revered$ -a $algorithm-no$ -b $bool:batchmode$ -z $bool:compress$
