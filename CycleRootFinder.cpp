@@ -80,6 +80,7 @@ int findRootNodesNew(std::string input, std::string output, int window, int clea
             cout << ",summary size," << completeSummary.size();
             cout << ",memory," << getMem();
             cout << " ,delete count," << cleanup(&completeSummary, timestamp, window_bracket);
+            cout << ",memory after cleanup," << getMem();
             std::cout << " ,clean time," << timer.LiveElapsedSeconds() - ptime << std::endl;
         }
     }
