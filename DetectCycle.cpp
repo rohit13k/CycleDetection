@@ -570,10 +570,10 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
     for (root_candidate_approx_itr = root_candidate_approx.begin();
          root_candidate_approx_itr != root_candidate_approx.end(); ++root_candidate_approx_itr) {
         rootnode = root_candidate_approx_itr->root_node;
-
+cout<<"finding cycle for "<<rootnode<<" neibhours: "<<root_candidate_approx_itr->neighbours_candidates.size()<<endl;
         DynamicDFSApprox(*root_candidate_approx_itr, window_bracket, use_bundle, &all_cycle);
         count++;
-        if (count % 1000 == 0) {
+        if (count % 10 == 0) {
             cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, "
                  << resultAllPath.size() << ",max E: " << max_E_count << endl;
         }
@@ -1281,7 +1281,9 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
     timeBundle new_time_x;
     int t_min;
     bool not_present;
+
     for (auto x: V) {
+
         if (ct.count(x) == 0) {
             ct[x] = std::numeric_limits<int>::max();
             set<pair<nodeid, int>> temp;
@@ -1301,6 +1303,7 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
             eb.to_node = x;
             pathBundle newPathBundle = expandPathBundle(path_bundle_till_here, eb);
             if (newPathBundle.path.size() != 0) {
+                cout<< x <<" ";
                 int last_x = allPathBundleApprox(newPathBundle, t_e, candidates, cycleLengthArray);
                 if (last_x > lastp) {
                     lastp = last_x;
@@ -1677,14 +1680,16 @@ DynamicDFSApprox(approxCandidatesNew candidate, int window_bracket, bool use_bun
                 V.insert(x.toVertex);
             }
         }
+
         V.erase(root_node);
+        cout<<"neighbours: "<<V.size()<<endl;
         for (auto x:V) {
 
             ct.clear();
             U.clear();
             tb.times = getAllTime(neighbours, x);
             if (tb.times.size() > 0) {
-
+cout<<x<<" ";
 
                 pathBundle path_bundle_till_here;
                 edgeBundle eb;
@@ -1695,9 +1700,11 @@ DynamicDFSApprox(approxCandidatesNew candidate, int window_bracket, bool use_bun
 
                 allPathBundleApprox(path_bundle_till_here, candidate.end_time, candidate.neighbours_candidates[x],
                                     cycleLengthArray);
+                cout<<endl;
             }
 
         }
+
 
 
     }
