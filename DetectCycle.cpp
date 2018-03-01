@@ -566,7 +566,7 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
     int count = 0;
     int rootnode;
     int root_neigbour;
-    bloom_filter candidateset;
+   // bloom_filter candidateset;
     for (root_candidate_approx_itr = root_candidate_approx.begin();
          root_candidate_approx_itr != root_candidate_approx.end(); ++root_candidate_approx_itr) {
         rootnode = root_candidate_approx_itr->root_node;
@@ -1678,6 +1678,9 @@ DynamicDFSApprox(approxCandidatesNew candidate, int window_bracket, bool use_bun
         for (auto x:neighbours) {
             if (candidate.neighbours_candidates.count(x.toVertex) > 0) {
                 V.insert(x.toVertex);
+                if(x.toVertex!=root_node){
+                    ct[x.toVertex] = std::numeric_limits<int>::max();
+                }
             }
         }
 
@@ -1685,8 +1688,8 @@ DynamicDFSApprox(approxCandidatesNew candidate, int window_bracket, bool use_bun
         cout<<"neighbours: "<<V.size()<<endl;
         for (auto x:V) {
 
-            ct.clear();
-            U.clear();
+          //  ct.clear();
+        //    U.clear();
             tb.times = getAllTime(neighbours, x);
             if (tb.times.size() > 0) {
 cout<<x<<" ";
