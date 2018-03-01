@@ -1306,7 +1306,7 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
             eb.from_node = v_current;
             eb.to_node = x;
             pathBundle newPathBundle = expandPathBundle(path_bundle_till_here, eb);
-            if (newPathBundle.path.size() != 0) {
+            if (newPathBundle.path.size() != 0& newPathBundle.getAllNodes().size()==newPathBundle.path.size()) {
                 cout<< x <<" ";
                 int last_x = allPathBundleApprox(newPathBundle, t_e, candidates, cycleLengthArray);
                 if (last_x > lastp) {
