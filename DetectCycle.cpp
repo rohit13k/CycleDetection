@@ -1215,6 +1215,7 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
     int t_current = lastEdge.time.getMinTime();
     int v_current = lastEdge.to_node;
     int rootnode = path_bundle_till_here.getRootNode();
+    set<int> seen=path_bundle_till_here.getAllNodes();
     ct[v_current] = t_current;
     int lastp = 0;
 
@@ -1251,7 +1252,10 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
     int cyclelenght;
     for (auto x: E) {
         if (candidates.contains(x.toVertex)) {
-            V.insert(x.toVertex);
+            if(seen.count(x.toVertex)==0){
+                V.insert(x.toVertex);
+            }
+
         }
     }
     if (V.count(rootnode) > 0) {

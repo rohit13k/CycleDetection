@@ -146,7 +146,14 @@ struct pathBundle {
             return -1;
         }
     }
-
+set<int> getAllNodes(){
+    set<int> nodes;
+    for (edgeBundle eb:path) {
+        nodes.insert(eb.to_node);
+    }
+    nodes.erase(getRootNode());
+    return nodes;
+}
     edgeBundle getLastEdge() {
         if (path.size() == 0) {
             cout << "error" << endl;
