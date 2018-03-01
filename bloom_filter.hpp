@@ -27,7 +27,8 @@
 #include <limits>
 #include <string>
 #include <vector>
-
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/vector.hpp>
 
 static const std::size_t bits_per_char = 0x08;    // 8 bits in 1 char(unsigned)
 
@@ -181,6 +182,7 @@ public:
 
         //  bit_table_.resize(table_size_ / bits_per_char, static_cast<unsigned char>(0x00));
     }
+
 /*
     bloom_filter()
             : salt_count_(0),
@@ -205,7 +207,18 @@ public:
 
       //  bit_table_.resize(table_size_ / bits_per_char, static_cast<unsigned char>(0x00));
     }
-
+    bloom_filter(std::vector <bloom_type> salt, std::vector<unsigned char> bit_table, unsigned int salt_count,
+                 unsigned long long int table_size, unsigned long long int projected_element_count,
+                 unsigned long long int inserted_element_count, unsigned long long int random_seed,
+                 double desired_false_positive_probability)
+            : salt_(salt),
+              bit_table_(bit_table),
+              salt_count_(salt_count),
+              table_size_(table_size),
+              projected_element_count_(projected_element_count),
+              inserted_element_count_(inserted_element_count),
+              random_seed_(random_seed),
+              desired_false_positive_probability_(desired_false_positive_probability) {}
     bloom_filter(const bloom_filter &filter) {
         this->operator=(filter);
     }
@@ -568,7 +581,7 @@ protected:
 
         return hash;
     }
-
+public:
     std::vector<bloom_type> salt_;
     std::vector<unsigned char> bit_table_;
     unsigned int salt_count_;
@@ -577,6 +590,10 @@ protected:
     unsigned long long int inserted_element_count_;
     unsigned long long int random_seed_;
     double desired_false_positive_probability_;
+    template<class Archive>
+    void serialize(Archive &archive) {
+        archive(salt_, bit_table_, salt_count_, table_size_,projected_element_count_,inserted_element_count_,random_seed_,desired_false_positive_probability_); // serialize things by passing them to the archive
+    }
 };
 
 

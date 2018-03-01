@@ -76,8 +76,9 @@ cleanup(map<int, bloom_filter> *completeSummary, map<int, int> *node_update_time
 
 int findRootNodesApprox(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge);
 
-set<approxCandidatesNew> findRootNodesApproxBothDirection(std::string input, std::string output, int window, int cleanUpLimit, bool reverseEdge);
-
+set<approxCandidatesNew>
+findRootNodesApproxBothDirectionWithSerialization(std::string input, std::string output, int window, int cleanUpLimit,
+                                                  bool reverseEdge,std::string tempFolder);
 int findCandidateFromApprox(std::string input, string root_file, std::string output, int window, int cleanUpLimit,
                             bool reverseEdge);
 

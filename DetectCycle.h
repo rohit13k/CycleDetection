@@ -343,6 +343,27 @@ struct endNode {
     }
 
 };
+struct endNodeNew {
+    unsigned int node_id;
+    unsigned int end_time;
+
+    bool operator<(const endNodeNew &rhs) const {
+        if (rhs.node_id == node_id) {
+            return end_time<rhs.end_time;
+        } else
+            return node_id < rhs.end_time;
+    }
+
+    bool operator==(const endNodeNew &rhs) const {
+        if (node_id==rhs.node_id&end_time==rhs.end_time) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+};
+
 struct monitor{
     int cycles[50]={0};
     int edge_count=0;

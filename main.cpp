@@ -135,9 +135,7 @@ int main(int argc, char **argv) {
             std::cout << "Finding root nodes using bidirectional bloom: input: " << inputGraph << " result: "
                       << root_file << std::endl;
 
-            //   set<approxCandidates> root_candidates = findRootNodesApproxBothDirection(inputGraph, root_file, window,
-            //                                                                            cleanUpLimit, reverseEdge);
-            set<approxCandidatesNew> root_candidates = findRootNodesApproxBothDirectionNew(inputGraph, root_file,
+              set<approxCandidatesNew> root_candidates = findRootNodesApproxBothDirectionNew(inputGraph, root_file,
                                                                                            window,
                                                                                            cleanUpLimit, reverseEdge);
             pend = timer.LiveElapsedSeconds();
@@ -210,7 +208,36 @@ int main(int argc, char **argv) {
             getSignificantCycle(window, significance_file);
             //   cout<<binomialCoeff(5,5)<<endl;
 
-        } else {
+        } else if (rootAlgo == 12) {
+        //test for memory without cleanup forward only using bloom
+        prepareData(inputGraph, resultFile, reverseEdge);
+        string significance_file = "sig_" + inputGraph;
+        getSignificantCycle(window, significance_file);
+        //   cout<<binomialCoeff(5,5)<<endl;
+
+    } else if (rootAlgo == 13) {
+            //find root node using bloom filter
+            string root_file = inputGraph;
+            std::string ext;
+            ext = "-root-" + to_string(window) + '.' + "bloom";
+            root_file.replace(root_file.end() - 4, root_file.end(), ext);
+            std::cout << "Finding root nodes using bidirectional bloom: input: " << inputGraph << " result: "
+                      << root_file << std::endl;
+
+            set<approxCandidatesNew> root_candidates = findRootNodesApproxBothDirectionWithSerialization(inputGraph, root_file, window,
+                                                                                                         cleanUpLimit, reverseEdge,"D:\\dataset\\Temp\\");
+
+            pend = timer.LiveElapsedSeconds();
+            std::cout << "Time to find all root candidates: " << pend << std::endl;
+            std::cout << "Memory: " << getMem() << std::endl;
+            std::cout << "Finding cycles using  bloom: input: " << inputGraph << " result: " << resultFile << std::endl;
+            std::string cycleFile = resultFile;
+            cycleFile.replace(cycleFile.end() - 3, cycleFile.end(), "cycle");
+            // findAllCycleUsingBloom(inputGraph, &root_candidates, resultFile, window, reverseEdge,use_bundle.getValue());
+            findAllCycleUsingBloom(inputGraph, &root_candidates, cycleFile, window, reverseEdge, use_bundle.getValue());
+            std::cout << "Time to find cycle using bloom: " << timer.LiveElapsedSeconds() - pend << std::endl;
+
+    } else {
             std::cout << "Un defined Algorithm param " << rootAlgo << std::endl;
         }
 
