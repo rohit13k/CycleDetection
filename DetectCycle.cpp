@@ -6,10 +6,7 @@
 #include "Split.h"
 #include "Timer.h"
 #include "MemoryMonitor.h"
-#include <time.h>
 #include <fstream>
-#include <sstream>
-#include <iostream>
 #include <stack>
 #include <queue>
 
@@ -324,7 +321,7 @@ int findAllCycle(std::string dataFile, std::string rootNodeFile, std::string out
     monitor_result.replace(monitor_result.end() - 4, monitor_result.end(), ext);
     ofstream monitor_writer;
     monitor_writer.open(monitor_result.c_str());
-    monitor_writer<<"root,neigbhour,candidate_count,edge_count,time,cycles\n";
+    monitor_writer << "root,neigbhour,candidate_count,edge_count,time,cycles\n";
     ofstream cycleResult;
     cycleResult.open(output.c_str());
     string line;
@@ -566,14 +563,14 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
     int count = 0;
     int rootnode;
     int root_neigbour;
-   // bloom_filter candidateset;
+    // bloom_filter candidateset;
     for (root_candidate_approx_itr = root_candidate_approx.begin();
          root_candidate_approx_itr != root_candidate_approx.end(); ++root_candidate_approx_itr) {
         rootnode = root_candidate_approx_itr->root_node;
-cout<<"finding cycle for "<<rootnode<<" neibhours: "<<root_candidate_approx_itr->neighbours_candidates.size()<<endl;
+//cout<<"finding cycle for "<<rootnode<<" neibhours: "<<root_candidate_approx_itr->neighbours_candidates.size()<<endl;
         DynamicDFSApprox(*root_candidate_approx_itr, window_bracket, use_bundle, &all_cycle);
         count++;
-        if (count % 10 == 0) {
+        if (count % 100 == 0) {
             cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, "
                  << resultAllPath.size() << ",max E: " << max_E_count << endl;
         }
@@ -1125,10 +1122,7 @@ allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidate
     if (V.count(rootnode) > 0) {
         timeBundle T;
         T.times = getAllTime(E, rootnode);
-        int max_t = T.getMaxTime();
-        if (max_t > lastp) {
-            lastp = max_t;
-        }
+
         edgeBundle closing_edge;
         closing_edge.from_node = v_current;
         closing_edge.to_node = rootnode;
@@ -1139,6 +1133,10 @@ allPathBundle(pathBundle path_bundle_till_here, int t_e, std::set<int> candidate
             // resultAllPath.insert(cycle.printPath());
             resultAllPathBundle[rootnode][cycle_length].push_back(cycle);
             m->cycles[cycle_length]++;
+            int max_t = T.getMaxTime();
+            if (max_t > lastp) {
+                lastp = max_t;
+            }
 
         }
 
@@ -1215,7 +1213,7 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
     int t_current = lastEdge.time.getMinTime();
     int v_current = lastEdge.to_node;
     int rootnode = path_bundle_till_here.getRootNode();
-    set<int> seen=path_bundle_till_here.getAllNodes();
+    set<int> seen = path_bundle_till_here.getAllNodes();
     ct[v_current] = t_current;
     int lastp = 0;
 
@@ -1235,6 +1233,7 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
             }
         }
     }
+
     for (auto x:remove_E) {
         E.erase(x);
     }
@@ -1252,34 +1251,43 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
     int cyclelenght;
     for (auto x: E) {
         if (candidates.contains(x.toVertex)) {
-            if(seen.count(x.toVertex)==0){
+            if (seen.count(x.toVertex) == 0) {
                 V.insert(x.toVertex);
             }
 
         }
     }
     if (V.count(rootnode) > 0) {
+         // string subgraph="D://dataset//twitter_mini_cycle.txt";
+         //  ofstream cycleFile;
+        //   cycleFile.open(subgraph.c_str(),std::ofstream::app);
         timeBundle T;
         T.times = getAllTime(E, rootnode);
         int max_t = T.getMaxTime();
         if (max_t > lastp) {
             lastp = max_t;
         }
-        edgeBundle closing_edge;
-        closing_edge.from_node = v_current;
-        closing_edge.to_node = rootnode;
-        closing_edge.time = T;
-        pathBundle cycle = expandPathBundle(path_bundle_till_here, closing_edge);
-        int cycle_length = cycle.path.size();
-        if (cycle_length > 2) {
-            // resultAllPath.insert(cycle.printPath());
-            resultAllPathBundle[rootnode][cycle_length].push_back(cycle);
+        if (path_bundle_till_here.path.size() > 1) {
 
 
+            edgeBundle closing_edge;
+            closing_edge.from_node = v_current;
+            closing_edge.to_node = rootnode;
+            closing_edge.time = T;
+            pathBundle cycle = expandPathBundle(path_bundle_till_here, closing_edge);
+            int cycle_length = cycle.path.size();
+            if (cycle_length > 2) {
+                // resultAllPath.insert(cycle.printPath());
+              //       cycleFile<<cycle.printPath()<<"\n";
+                resultAllPathBundle[rootnode][cycle_length].push_back(cycle);
+
+
+            }
         }
-
-
+        //   cycleFile.flush();
+        //   cycleFile.close();
     }
+
     V.erase(rootnode);
     timeBundle time_x;
     timeBundle new_time_x;
@@ -1306,8 +1314,8 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
             eb.from_node = v_current;
             eb.to_node = x;
             pathBundle newPathBundle = expandPathBundle(path_bundle_till_here, eb);
-            if (newPathBundle.path.size() != 0& newPathBundle.getAllNodes().size()==newPathBundle.path.size()) {
-                cout<< x <<" ";
+            if (newPathBundle.path.size() != 0 & newPathBundle.getAllNodes().size() == newPathBundle.path.size()) {
+               // cout << x << " ";
                 int last_x = allPathBundleApprox(newPathBundle, t_e, candidates, cycleLengthArray);
                 if (last_x > lastp) {
                     lastp = last_x;
@@ -1447,23 +1455,26 @@ string DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates,
     monitor m;
     Platform::Timer monitor_timer;
     set<pedge> neighbours;
+    ct.clear();
+    U.clear();
     if (isCompressed) {
         neighbours = getFilteredData(rootnode, t_s,
                                      t_end);// all the edges of type rootnode,*,t where t is between t_s and t_end
     } else {
         neighbours = getFilteredData(rootnode, t_s);// all the edges of type rootnode,*,t_s
     }
+    // cout<<"finding cycle for: "<<rootnode<<" neighbours "<<neighbours.size()<<endl;
     if (use_bundle) {
         timeBundle tb;
         set<int> V;
+
         for (auto x:neighbours) {
             if (candidates.count(x.toVertex) > 0) {
                 V.insert(x.toVertex);
             }
         }
         for (auto x:V) {
-            ct.clear();
-            U.clear();
+
             tb.times = getAllTime(neighbours, x);
             if (tb.times.size() > 0) {
                 m.clear();
@@ -1477,7 +1488,7 @@ string DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates,
 
                 path_bundle_till_here.path.push_back(eb);
                 monitor_timer.Start();
-                m.candidate_count=tempcanidates.size()-1;
+                m.candidate_count = tempcanidates.size() - 1;
                 allPathBundle(path_bundle_till_here, t_end, tempcanidates, cycleLengthArray, &m);
                 monitor_result =
                         monitor_result + to_string(rootnode) + "," + to_string(x) + "," + to_string(m.candidate_count) +
@@ -1502,8 +1513,7 @@ string DynamicDFS(nodeid rootnode, int t_s, int t_end, std::set<int> candidates,
     } else {
         for (auto x:neighbours) {
             if (candidates.count(x.toVertex) > 0) {
-                ct.clear();
-                U.clear();
+
                 if (candidates_provided) {
                     std::set<int> tempcandidate = candidates;
 
@@ -1679,24 +1689,27 @@ DynamicDFSApprox(approxCandidatesNew candidate, int window_bracket, bool use_bun
 
         timeBundle tb;
         set<int> V;
+
+
         for (auto x:neighbours) {
             if (candidate.neighbours_candidates.count(x.toVertex) > 0) {
                 V.insert(x.toVertex);
-                if(x.toVertex!=root_node){
+
+                if (x.toVertex != root_node) {
                     ct[x.toVertex] = std::numeric_limits<int>::max();
                 }
             }
         }
 
         V.erase(root_node);
-        cout<<"neighbours: "<<V.size()<<endl;
+        //    cout<<"neighbours: "<<V.size()<<endl;
         for (auto x:V) {
 
-          //  ct.clear();
-        //    U.clear();
+            //  ct.clear();
+            //    U.clear();
             tb.times = getAllTime(neighbours, x);
             if (tb.times.size() > 0) {
-cout<<x<<" ";
+//cout<<"neig "<<x<<" : ";
 
                 pathBundle path_bundle_till_here;
                 edgeBundle eb;
@@ -1707,14 +1720,12 @@ cout<<x<<" ";
 
                 allPathBundleApprox(path_bundle_till_here, candidate.end_time, candidate.neighbours_candidates[x],
                                     cycleLengthArray);
-                cout<<endl;
+                //cout<<endl;
             }
 
         }
-
-
-
     }
+
 }
 
 void DynamicDFSExact(exactCandidates candidate, int window_bracket, bool use_bundle, vector<int> *cycleLengthArray) {
