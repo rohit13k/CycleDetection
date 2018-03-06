@@ -17,6 +17,7 @@ map<nodeid, timeGroup> rootNodes;
 map<nodeid, int> ct;//closing times
 std::set<string> resultAllPath;
 std::map<int, map<int, vector<pathBundle>>> resultAllPathBundle;
+int cycle_count = 0;
 map<nodeid, set<pair<nodeid, int>>> U;//unblock list
 int max_E_count;
 
@@ -575,7 +576,7 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
                  << resultAllPath.size() << ",max E: " << max_E_count << endl;
         }
     }
-    cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, " << resultAllPath.size()
+    cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, " << cycle_count
          << ",max E: " << max_E_count << endl;
     int root_node;
     if (use_bundle) {
@@ -1258,8 +1259,8 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
         }
     }
     if (V.count(rootnode) > 0) {
-         // string subgraph="D://dataset//twitter_mini_cycle.txt";
-         //  ofstream cycleFile;
+        // string subgraph="D://dataset//twitter_mini_cycle.txt";
+        //  ofstream cycleFile;
         //   cycleFile.open(subgraph.c_str(),std::ofstream::app);
         timeBundle T;
         T.times = getAllTime(E, rootnode);
@@ -1268,21 +1269,23 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
             lastp = max_t;
         }
         if (path_bundle_till_here.path.size() > 1) {
-
-
-            edgeBundle closing_edge;
-            closing_edge.from_node = v_current;
-            closing_edge.to_node = rootnode;
-            closing_edge.time = T;
-            pathBundle cycle = expandPathBundle(path_bundle_till_here, closing_edge);
-            int cycle_length = cycle.path.size();
-            if (cycle_length > 2) {
-                // resultAllPath.insert(cycle.printPath());
-              //       cycleFile<<cycle.printPath()<<"\n";
-                resultAllPathBundle[rootnode][cycle_length].push_back(cycle);
-
-
+            cycle_count++;
+            if (cycle_count % 1000 == 0) {
+                cout << "cycles found: " << cycle_count << endl;
             }
+            //  edgeBundle closing_edge;
+            //   closing_edge.from_node = v_current;
+            //   closing_edge.to_node = rootnode;
+            //   closing_edge.time = T;
+            //   pathBundle cycle = expandPathBundle(path_bundle_till_here, closing_edge);
+            // int cycle_length = cycle.path.size();
+            // if (cycle_length > 2) {
+            // resultAllPath.insert(cycle.printPath());
+            //       cycleFile<<cycle.printPath()<<"\n";
+            //  resultAllPathBundle[rootnode][path_bundle_till_here.path.size()+1].push_back(null);
+
+
+            //  }
         }
         //   cycleFile.flush();
         //   cycleFile.close();
@@ -1315,7 +1318,7 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
             eb.to_node = x;
             pathBundle newPathBundle = expandPathBundle(path_bundle_till_here, eb);
             if (newPathBundle.path.size() != 0 & newPathBundle.getAllNodes().size() == newPathBundle.path.size()) {
-               // cout << x << " ";
+                // cout << x << " ";
                 int last_x = allPathBundleApprox(newPathBundle, t_e, candidates, cycleLengthArray);
                 if (last_x > lastp) {
                     lastp = last_x;
