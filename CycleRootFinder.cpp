@@ -3,16 +3,9 @@
 //
 
 #include "CycleRootFinder.h"
-#include "FileIndexer.h"
 #include "Split.h"
 #include "Timer.h"
 #include "MemoryMonitor.h"
-#include <fstream>
-#include <limits>
-#include <algorithm>
-#include <time.h>
-#include "DetectCycle.h"
-#include "bloom_filter.hpp"
 
 using namespace std;
 
@@ -323,7 +316,7 @@ int findRootNodesApprox(std::string input, std::string output, int window, int c
 
 set<approxCandidatesNew>
 findRootNodesApproxBothDirectionWithSerialization(std::string input, std::string output, int window, int cleanUpLimit,
-                                    bool reverseEdge,std::string tempFolder) {
+                                                  bool reverseEdge, std::string tempFolder) {
 
     map<int, bloom_filter> completeSummary;
     //map<root,map<<t_start,t_end>,<dst,approx candidateset>>>
@@ -382,7 +375,7 @@ findRootNodesApproxBothDirectionWithSerialization(std::string input, std::string
             en.node_id = root_neigbhour_time.second.first;
             en.end_time = root_neigbhour_time.second.second;
             rootnode_end_time_set[root_neigbhour_time.first].insert(en);
-            string binfile=tempFolder+to_string(en.node_id)+"_"+to_string( en.end_time )+".bin";
+            string binfile = tempFolder + to_string(en.node_id) + "_" + to_string(en.end_time) + ".bin";
             std::ofstream os(binfile, std::ios::binary);
             cereal::BinaryOutputArchive archive(os);
             archive(completeSummary[dst]);
@@ -448,7 +441,8 @@ findRootNodesApproxBothDirectionWithSerialization(std::string input, std::string
                             //    result << dst; //end of cycle
 
                             //    result << "\n";
-                            string binfile=tempFolder+to_string(possible_end_time_set_it->node_id)+"_"+to_string(possible_end_time_set_it->end_time)+".bin";
+                            string binfile = tempFolder + to_string(possible_end_time_set_it->node_id) + "_" +
+                                             to_string(possible_end_time_set_it->end_time) + ".bin";
                             std::ifstream INFILE(binfile, std::ios::binary);
                             cereal::BinaryInputArchive iarchive(INFILE);
                             bloom_filter old_bloom;
@@ -538,7 +532,7 @@ findRootNodesApproxBothDirectionWithSerialization(std::string input, std::string
 }
 
 set<approxCandidatesNew>
-findRootNodesApproxBothDirectionNew(std::string input, std::string output, int window, int cleanUpLimit,
+findRootNodesApproxBothDirectionNew(std::string input, std::string rootFile, int window, int cleanUpLimit,
                                     bool reverseEdge) {
     map<int, bloom_filter> completeSummary;
     //map<root,map<<t_start,t_end>,<dst,approx candidateset>>>
@@ -617,7 +611,7 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
     int end_time;
     bloom_filter old_bloom;
     cout << "Memory after first pass: " << getMem() << std::endl;
-    cout<< "Candidates after first pass: "<<rootnode_end_time_set.size()<<std::endl;
+    cout << "Candidates after first pass: " << rootnode_end_time_set.size() << std::endl;
     int end_neighbour;
     completeSummary.clear();
     node_update_time.clear();
@@ -735,6 +729,8 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
     set<approxCandidatesNew> final_roots = compressRootCandidatesNew(&root_candidate_approx, window_bracket);
     std::cout << "Time to Compress : " << timer.LiveElapsedSeconds() - ptime << " #roots found: "
               << final_roots.size() << std::endl;
+    printCandidates(final_roots, rootFile);
+    std::cout << "written root nodes" << endl;
     timer.Stop();
     std::cout << "Memory after compress: " << getMem() << std::endl;
     root_candidate_approx.clear();
@@ -742,6 +738,36 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string output, int w
     std::cout << "Memory after compress clear: " << getMem() << std::endl;
     return final_roots;
 }
+
+void printCandidates(set<approxCandidatesNew> final_roots, string path) {
+    ofstream rootFile;
+    rootFile.open(path.c_str());
+    for (approxCandidatesNew candidate:final_roots) {
+        rootFile << candidate.root_node << endl;
+    }
+    rootFile.flush();
+    rootFile.close();
+}
+
+set<approxCandidatesNew> filterRoots(set<approxCandidatesNew> final_roots, string root_file) {
+    set<approxCandidatesNew> new_roots;
+    set<int> roots;
+    ifstream infile(root_file.c_str());
+    string line;
+    while (infile >> line) {
+        roots.insert(stoi(line));
+    }
+
+    for (approxCandidatesNew candidates:final_roots) {
+        if (roots.count(candidates.root_node) > 0) {
+            new_roots.insert(candidates);
+
+        }
+    }
+
+    return new_roots;
+}
+
 //pending
 void findCyclesBothDirection(std::string input, std::string output, int window, int cleanUpLimit,
                              bool reverseEdge) {

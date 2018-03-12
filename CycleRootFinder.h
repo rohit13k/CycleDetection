@@ -111,5 +111,6 @@ string combineSeeds(std::string root_file, int window);
 set<approxCandidatesNew>
 compressRootCandidatesNew(map<int, map<cycle_time, map<int, bloom_filter>>> *root_candidates,
                           int window_bracket);
-
+void printCandidates(set<approxCandidatesNew> final_roots,string path);
+set<approxCandidatesNew> filterRoots(set<approxCandidatesNew> final_roots, string root_file);
 #endif //CYCLEDETECTION_CYCLEROOTFINDER_H

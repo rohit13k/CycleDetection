@@ -1259,7 +1259,7 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
         }
     }
     if (V.count(rootnode) > 0) {
-         string subgraph="twitter_mini_cycle.txt";
+         string subgraph="twitter_mini_cycle_"+to_string(rootnode)+".txt";
           ofstream cycleFile;
            cycleFile.open(subgraph.c_str(),std::ofstream::app);
         timeBundle T;
