@@ -19,7 +19,8 @@ int main(int argc, char **argv) {
                                                    "string");
         TCLAP::ValueArg<std::string> root_file_arg("f", "root_file_arg", "path of the root_file", false, "NA",
                                                    "string");
-
+        TCLAP::ValueArg<int> projected_element_count("e", "projected_element_count", "projected element count", false, 1000,
+                                                   "int");
         TCLAP::ValueArg<int> windowArg("w", "window", "time window in hours", false, 1, "int");
         TCLAP::ValueArg<std::string> resultArg("o", "result", "path to store the result", true, "", "string");
 
@@ -41,6 +42,7 @@ int main(int argc, char **argv) {
         cmd.add(reverse);
         cmd.add(isCompressed);
         cmd.add(use_bundle);
+        cmd.add(projected_element_count);
 
         cmd.add(cycle);
         cmd.add(root_file_arg);
@@ -140,7 +142,7 @@ int main(int argc, char **argv) {
 
             set<approxCandidatesNew> root_candidates = findRootNodesApproxBothDirectionNew(inputGraph, root_file,
                                                                                            window,
-                                                                                           cleanUpLimit, reverseEdge);
+                                                                                           cleanUpLimit, reverseEdge,projected_element_count.getValue());
             pend = timer.LiveElapsedSeconds();
             std::cout << "Time to find all root candidates: " << pend << std::endl;
             std::cout << "Memory: " << getMem() << std::endl;

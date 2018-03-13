@@ -96,7 +96,7 @@ updateSummaryExact(int src, int dst, int timestamp, int window_bracket, map<int,
 
 set<approxCandidatesNew>
 findRootNodesApproxBothDirectionNew(std::string input, std::string output, int window, int cleanUpLimit,
-                                    bool reverseEdge);
+                                    bool reverseEdge,int projected_element_count);
 set<exactCandidates>
 compressRootCandidates(map<int, map<cycle_time, map<int, set<int>>>> *root_candidates,
                        int window_bracket);

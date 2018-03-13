@@ -533,7 +533,7 @@ findRootNodesApproxBothDirectionWithSerialization(std::string input, std::string
 
 set<approxCandidatesNew>
 findRootNodesApproxBothDirectionNew(std::string input, std::string rootFile, int window, int cleanUpLimit,
-                                    bool reverseEdge) {
+                                    bool reverseEdge,int projected_element_count) {
     map<int, bloom_filter> completeSummary;
     //map<root,map<<t_start,t_end>,<dst,approx candidateset>>>
     map<int, map<cycle_time, map<int, bloom_filter>>> root_candidate_approx;
@@ -543,7 +543,7 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string rootFile, int
     bloom_parameters parameters;
     pair<int, pair<int, int>> root_neigbhour_time;
     // How many elements roughly do we expect to insert?
-    parameters.projected_element_count = 5000;
+    parameters.projected_element_count = projected_element_count;
 
     // Maximum tolerable false positive probability? (0,1)
     parameters.false_positive_probability = 0.0001; // 1 in 10000
