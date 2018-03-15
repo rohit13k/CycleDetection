@@ -27,7 +27,7 @@ int findRootNodesNew(std::string input, std::string output, int window, int clea
     int timestamp;
 
     int count = 0;
-
+int root_count=0;
     int window_bracket = window * 60 * 60;
     double ptime = 0.0;
 
@@ -58,6 +58,7 @@ int findRootNodesNew(std::string input, std::string output, int window, int clea
                                                         window_bracket, src, dst);
                 for (string c:cycles) {
                     result << c << "\n";
+                    root_count++;
                 }
             }
 
@@ -79,6 +80,7 @@ int findRootNodesNew(std::string input, std::string output, int window, int clea
     }
     std::cout << "finished parsing all " << timer.LiveElapsedSeconds()
               << std::endl;
+    std::cout<<"#roots found:"<<root_count<<endl;
     timer.Stop();
 
     result.close();
