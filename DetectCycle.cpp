@@ -17,7 +17,7 @@ map<nodeid, int> ct;//closing times
 std::set<string> resultAllPath;
 std::map<int, map<int, vector<pathBundle>>> resultAllPathBundle;
 int cycle_count = 0;
-
+bool cycle_found=false;
 map<nodeid, set<pair<nodeid, int>>> U;//unblock list
 int max_E_count;
 
@@ -564,20 +564,26 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
     int count = 0;
     int rootnode;
     int root_neigbour;
+    int cycle_found_count=0;
     // bloom_filter candidateset;
     for (root_candidate_approx_itr = root_candidate_approx.begin();
          root_candidate_approx_itr != root_candidate_approx.end(); ++root_candidate_approx_itr) {
         rootnode = root_candidate_approx_itr->root_node;
      //   cout<<"finding cycle for "<<rootnode<<" neibhours: "<<root_candidate_approx_itr->neighbours_candidates.size()<<endl;
+       cycle_found=false;
         DynamicDFSApprox(*root_candidate_approx_itr, window_bracket, use_bundle, &all_cycle);
         count++;
+        if(cycle_found){
+            cycle_found_count++;
+        }
         if (count % 10000 == 0) {
             cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, "
                  << resultAllPath.size() << ",max E: " << max_E_count << endl;
         }
     }
-    cout << "finished processing, " << count << " memory, " << getMem() << " cycle found, " << cycle_count
-         << ",max E: " << max_E_count << endl;
+    cout << "finished processing root count," << count << " ,memory, " << getMem() << " ,cycle found, " << cycle_count
+         << ",max E, " << max_E_count << ",cycle_found_count,"<<cycle_found_count<<endl;
+    
     int root_node;
     if (use_bundle) {
         //  map<int, int> cycle_3_count;
@@ -612,7 +618,7 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
                         //check if its overlaping to last one
                         if (is_overlapping(&currentBundle, &lastBundle)) {
 
-
+std::cout<<"overlapping bundles found: "<<std::endl;
                             for (auto x:lastBundle.path[cycle_length - 1].time.times) {
                                 currentBundle.path[cycle_length - 1].time.times.erase(x);
                             }
@@ -1278,12 +1284,13 @@ allPathBundleApprox(pathBundle path_bundle_till_here, int t_e, bloom_filter cand
              int cycle_length = cycle.path.size();
              if (cycle_length > 2) {
                  cycle_count++;
+                 cycle_found=true;
                  if (cycle_count % 100000 == 0) {
                 //     cout << "cycles found: " << cycle_count << endl;
                  }
             // resultAllPath.insert(cycle.printPath());
          //          cycleFile<<cycle.printPath()<<"\n";
-          //    resultAllPathBundle[rootnode][path_bundle_till_here.path.size()+1].push_back(cycle);
+           //   resultAllPathBundle[rootnode][path_bundle_till_here.path.size()+1].push_back(cycle);
 
 
               }
