@@ -721,7 +721,7 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string rootFile, int
     //result.close();
 
     std::cout << "Time to find seeds: " << timer.LiveElapsedSeconds() << std::endl;
-    std::cout << "#root founds: " << root_candidate_approx.size() << std::endl;
+
     std::cout << "Memory after 2nd phase: " << getMem() << std::endl;
     completeSummary.clear();
     node_update_time.clear();
@@ -735,6 +735,7 @@ findRootNodesApproxBothDirectionNew(std::string input, std::string rootFile, int
     std::cout << "written root nodes" << endl;
     timer.Stop();
     std::cout << "Memory after compress: " << getMem() << std::endl;
+    std::cout << "#root founds: " << final_roots.size() << std::endl;
     root_candidate_approx.clear();
 
     std::cout << "Memory after compress clear: " << getMem() << std::endl;

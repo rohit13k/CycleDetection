@@ -583,7 +583,7 @@ int findAllCycleUsingBloom(std::string dataFile, set<approxCandidatesNew> *root_
     }
     cout << "finished processing root count," << count << " ,memory, " << getMem() << " ,cycle found, " << cycle_count
          << ",max E, " << max_E_count << ",cycle_found_count,"<<cycle_found_count<<endl;
-    
+
     int root_node;
     if (use_bundle) {
         //  map<int, int> cycle_3_count;
